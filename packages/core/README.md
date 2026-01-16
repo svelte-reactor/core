@@ -20,7 +20,7 @@
 | 📝 **`createForm()` Helper** | Reactive forms with validation, async validators, draft persistence |
 | 🔄 **Renamed `multiTabSync`** | Now called `sync()` (old name deprecated) |
 | ⚠️ **Deprecated `asyncActions`** | Use plain async functions or wait for `createQuery()` in v0.4.0 |
-| ✅ **596 Tests** | +94 new form tests including stress tests |
+| ✅ **617 Tests** | +94 new form tests including stress tests |
 
 <details>
 <summary>📜 Previous Versions</summary>
@@ -48,21 +48,21 @@
 | **Sync** | Multi-Tab Sync, Cross-Tab BroadcastChannel |
 | **Async** | Auto Loading/Error States, Request Cancellation, Concurrency Control |
 | **Security** | Exclude Sensitive Data (`omit`/`pick`), TTL Auto-Expiration |
-| **DX** | AI Assistant Integration, DevTools, Rich Error Messages, 596 Tests |
+| **DX** | AI Assistant Integration, DevTools, Rich Error Messages, 617 Tests |
 | **Performance** | ~11.5 KB gzipped, Tree-Shakeable, SSR-Ready, TypeScript, Zero Dependencies |
 
 ## Installation
 
 ```bash
-npm install svelte-reactor
+npm install @svelte-reactor/core
 ```
 
 ```bash
-pnpm add svelte-reactor
+pnpm add @svelte-reactor/core
 ```
 
 ```bash
-yarn add svelte-reactor
+yarn add @svelte-reactor/core
 ```
 
 ## Bundle Size & Tree-Shaking
@@ -134,7 +134,7 @@ npx svelte-reactor init-ai --force
 ### 🎯 Simple Counter (3 lines!)
 
 ```typescript
-import { simpleStore } from 'svelte-reactor';
+import { simpleStore } from '@svelte-reactor/core';
 
 export const counter = simpleStore(0);
 ```
@@ -153,7 +153,7 @@ export const counter = simpleStore(0);
 ### 💾 Persisted Counter (Auto-saves to localStorage)
 
 ```typescript
-import { persistedStore } from 'svelte-reactor';
+import { persistedStore } from '@svelte-reactor/core';
 
 // Automatically persists to localStorage
 export const counter = persistedStore('counter', 0);
@@ -173,7 +173,7 @@ export const counter = persistedStore('counter', 0);
 ### 🔒 Secure User Store (Exclude sensitive data) - NEW in v0.2.3
 
 ```typescript
-import { persistedStore } from 'svelte-reactor';
+import { persistedStore } from '@svelte-reactor/core';
 
 export const user = persistedStore('user', {
   name: 'John',
@@ -195,8 +195,8 @@ export const user = persistedStore('user', {
 ### ♻️ Advanced Store with Undo/Redo
 
 ```typescript
-import { persistedReactor } from 'svelte-reactor';
-import { undoRedo, logger } from 'svelte-reactor/plugins';
+import { persistedReactor } from '@svelte-reactor/core';
+import { undoRedo, logger } from '@svelte-reactor/core/plugins';
 
 export const editor = persistedReactor('editor', {
   content: '',
@@ -235,7 +235,7 @@ Simple writable store compatible with Svelte's `$store` syntax.
 **→ [See full example in Quick Start](./QUICK_START.md#simple-counter-store)**
 
 ```typescript
-import { simpleStore } from 'svelte-reactor';
+import { simpleStore } from '@svelte-reactor/core';
 
 const counter = simpleStore(0);
 counter.subscribe(value => console.log(value));
@@ -264,7 +264,7 @@ Create a store that automatically persists to localStorage, sessionStorage, or I
 **→ [See full example in Quick Start](./QUICK_START.md#persisted-store-auto-save-to-localstorage)**
 
 ```typescript
-import { persistedStore } from 'svelte-reactor';
+import { persistedStore } from '@svelte-reactor/core';
 
 const settings = persistedStore('app-settings', { theme: 'dark' }, {
   storage: 'localStorage', // 'localStorage' | 'sessionStorage' | 'indexedDB' | 'memory'
@@ -284,8 +284,8 @@ Full reactor API with automatic persistence and plugin support.
 **→ [See full example in Quick Start](./QUICK_START.md#full-reactor-with-undoredo)**
 
 ```typescript
-import { persistedReactor } from 'svelte-reactor';
-import { undoRedo } from 'svelte-reactor/plugins';
+import { persistedReactor } from '@svelte-reactor/core';
+import { undoRedo } from '@svelte-reactor/core/plugins';
 
 const store = persistedReactor('my-state', { count: 0 }, {
   additionalPlugins: [undoRedo()],
@@ -303,7 +303,7 @@ Simplify array management with built-in CRUD operations.
 **→ [See Migration Guide](./MIGRATION.md#working-with-arrays)**
 
 ```typescript
-import { createReactor, arrayActions } from 'svelte-reactor';
+import { createReactor, arrayActions } from '@svelte-reactor/core';
 
 const todos = createReactor({ items: [] });
 const actions = arrayActions(todos, 'items', { idKey: 'id' });
@@ -330,7 +330,7 @@ const count = actions.count();
 Standalone pagination helper for large arrays:
 
 ```typescript
-import { createReactor, arrayPagination } from 'svelte-reactor';
+import { createReactor, arrayPagination } from '@svelte-reactor/core';
 
 const store = createReactor({ items: [] });
 const pagination = arrayPagination(store, 'items', {
@@ -433,7 +433,7 @@ Manage async operations with automatic loading and error states.
 **→ [See Migration Guide](./MIGRATION.md#async-operations--loading-states)**
 
 ```typescript
-import { createReactor, asyncActions } from 'svelte-reactor';
+import { createReactor, asyncActions } from '@svelte-reactor/core';
 
 const store = createReactor({
   users: [],
@@ -496,7 +496,7 @@ const api = asyncActions(store, { fetchUsers: fetchWithRetry });
 All svelte-reactor stores are 100% compatible with Svelte's store API, including `derived()` stores. You can now import everything from a single source:
 
 ```typescript
-import { simpleStore, derived, get, readonly } from 'svelte-reactor';
+import { simpleStore, derived, get, readonly } from '@svelte-reactor/core';
 
 // Create base stores
 const firstName = simpleStore('John');
@@ -521,7 +521,7 @@ const readonlyName = readonly(fullName);
 **Real-world example - Shopping Cart:**
 
 ```typescript
-import { createReactor, derived, get } from 'svelte-reactor';
+import { createReactor, derived, get } from '@svelte-reactor/core';
 
 interface CartItem {
   id: number;
@@ -579,7 +579,7 @@ console.log(get(cartSummary)); // "2 items - $20.00"
 Subscribe to specific parts of state for better performance using the `select()` method (v0.2.9):
 
 ```typescript
-import { createReactor, isEqual } from 'svelte-reactor';
+import { createReactor, isEqual } from '@svelte-reactor/core';
 
 const store = createReactor({
   user: { name: 'John', age: 30 },
@@ -648,7 +648,7 @@ form.select(
 Memoized computed state with dependency tracking (2-10x faster than `derived()`):
 
 ```typescript
-import { createReactor, computedStore, isEqual } from 'svelte-reactor';
+import { createReactor, computedStore, isEqual } from '@svelte-reactor/core';
 
 const store = createReactor({
   items: [{ id: 1, done: false }, { id: 2, done: true }],
@@ -677,7 +677,7 @@ const filtered = computedStore(store, state => {
 | `memory` | Unlimited | Runtime only | Testing, SSR |
 
 ```typescript
-import { persistedStore } from 'svelte-reactor';
+import { persistedStore } from '@svelte-reactor/core';
 
 // IndexedDB for large data (50MB+)
 const photos = persistedStore('photos', { items: [] }, {
@@ -764,7 +764,7 @@ interface Reactor<T> {
 Enable undo/redo functionality.
 
 ```typescript
-import { undoRedo } from 'svelte-reactor/plugins';
+import { undoRedo } from '@svelte-reactor/core/plugins';
 
 const reactor = createReactor(initialState, {
   plugins: [
@@ -786,7 +786,7 @@ reactor.update(state => { state.temp = 123; }, 'skip-history'); // Won't add to 
 Built-in state persistence with security features.
 
 ```typescript
-import { persist } from 'svelte-reactor/plugins';
+import { persist } from '@svelte-reactor/core/plugins';
 
 const reactor = createReactor(initialState, {
   plugins: [
@@ -825,7 +825,7 @@ const reactor = createReactor(initialState, {
 Log all state changes to console with advanced filtering.
 
 ```typescript
-import { logger } from 'svelte-reactor/plugins';
+import { logger } from '@svelte-reactor/core/plugins';
 
 const reactor = createReactor(initialState, {
   plugins: [
@@ -855,8 +855,8 @@ const reactor = createReactor(initialState, {
 Built-in DevTools API for time-travel debugging and state inspection:
 
 ```typescript
-import { createReactor } from 'svelte-reactor';
-import { createDevTools } from 'svelte-reactor/devtools';
+import { createReactor } from '@svelte-reactor/core';
+import { createDevTools } from '@svelte-reactor/core/devtools';
 
 const reactor = createReactor({ value: 0 });
 const devtools = createDevTools(reactor, { name: 'MyReactor' });
@@ -886,7 +886,7 @@ devtools.reset();
 Create custom middleware for advanced use cases:
 
 ```typescript
-import { createReactor } from 'svelte-reactor';
+import { createReactor } from '@svelte-reactor/core';
 
 const loggingMiddleware = {
   name: 'logger',
@@ -927,8 +927,8 @@ See [PERFORMANCE.md](./PERFORMANCE.md) for detailed benchmarks.
 
 ```svelte
 <script lang="ts">
-  import { createReactor } from 'svelte-reactor';
-  import { persist, undoRedo } from 'svelte-reactor/plugins';
+  import { createReactor } from '@svelte-reactor/core';
+  import { persist, undoRedo } from '@svelte-reactor/core/plugins';
 
   interface Todo {
     id: string;
@@ -1011,12 +1011,13 @@ For more examples, see [EXAMPLES.md](./EXAMPLES.md).
 
 ## Roadmap
 
-**Current:** v0.2.9 (500 tests, 11.11 KB gzipped) — See [CHANGELOG.md](./CHANGELOG.md) for version history.
+**Current:** v0.3.0 (617 tests, ~11.5 KB gzipped) — See [CHANGELOG.md](./CHANGELOG.md) for version history.
 
-### 🔜 v0.3.0 - Advanced Features (Planned)
-- Enhanced Computed/Derived State API
-- Advanced Selectors with memoization
-- Image compression for persist plugin
+### 🔜 v0.3.1 - IndexedDB Performance & Collections (Planned)
+- IndexedDB connection pooling and batch writes
+- Collection support for large arrays
+- Query support (preview)
+- Form examples (login, registration, wizard)
 
 ### 🚀 v1.0.0 - Stable Release (Future)
 - React/Vue adapters
@@ -1049,8 +1050,9 @@ pnpm typecheck
 
 The package includes comprehensive test coverage:
 
-- **500 tests** covering all features
+- **617 tests** covering all features
 - Unit tests for core reactor, plugins, helpers, utilities, and DevTools
+- Form integration tests with sync/async validation
 - Advanced complexity tests for edge cases and concurrent operations
 - Integration tests for IndexedDB, TTL, pagination, compression
 - Performance benchmarks for all operations
