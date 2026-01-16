@@ -390,24 +390,43 @@ export interface PersistOptions {
 
 /**
  * Options for logger plugin
+ *
+ * @example
+ * ```ts
+ * logger({ collapsed: true, performance: true })
+ * ```
  */
 export interface LoggerOptions {
   /** Collapse console groups (default: false) */
   collapsed?: boolean;
 
-  /** Filter actions to log (now supports state comparison) */
+  /** Filter actions to log (supports state comparison) */
   filter?: (action?: string, state?: any, prevState?: any) => boolean;
 
   /** Track performance and show execution time (default: false) */
+  performance?: boolean;
+
+  /**
+   * @deprecated Use `performance` instead. Will be removed in v0.4.0.
+   */
   trackPerformance?: boolean;
 
-  /** Warn if action takes longer than this (in ms). Requires trackPerformance */
+  /**
+   * @deprecated Rarely used. Will be removed in v0.4.0.
+   * Warn if action takes longer than this (in ms). Requires performance: true
+   */
   slowThreshold?: number;
 
-  /** Include timestamp in logs (default: false) */
+  /**
+   * @deprecated Rarely used. Will be removed in v0.4.0.
+   * Include timestamp in logs (default: false)
+   */
   includeTimestamp?: boolean;
 
-  /** Maximum depth for logged objects (default: 3) */
+  /**
+   * @deprecated Rarely used. Will be removed in v0.4.0.
+   * Maximum depth for logged objects (default: 3)
+   */
   maxDepth?: number;
 }
 

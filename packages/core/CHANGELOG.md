@@ -7,6 +7,59 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2025-01-10
+
+### New Features
+
+- **`createForm()` Helper** - Reactive form management for Svelte 5
+  - Full validation support (sync + async validators)
+  - Field-level and form-level validation
+  - Configurable validation timing: `change`, `blur`, or `submit`
+  - Draft persistence with `persistDraft` option (auto-saves to localStorage)
+  - Rich form state: `values`, `errors`, `touched`, `dirty`, `isValid`, `isDirty`, `isSubmitting`
+  - Methods: `setField()`, `setFields()`, `setError()`, `clearError()`, `setTouched()`, `validate()`, `validateField()`, `submit()`, `reset()`, `field()`, `destroy()`
+  - 94 comprehensive tests including stress tests
+
+### Package Restructure
+
+- **Monorepo Migration** - New scoped package structure
+  - Main package renamed to `@svelte-reactor/core`
+  - Compatibility wrapper `svelte-reactor` re-exports from `@svelte-reactor/core`
+  - Existing imports continue to work with deprecation notice
+
+```typescript
+// New (recommended)
+import { createReactor } from '@svelte-reactor/core';
+import { persist, sync } from '@svelte-reactor/core/plugins';
+import { createForm } from '@svelte-reactor/core/helpers';
+
+// Old (still works)
+import { createReactor } from 'svelte-reactor';
+```
+
+### API Cleanup
+
+- **Deprecated `asyncActions()`** - Will be removed in v0.4.0
+  - Use `createQuery()` (coming in v0.4.0) or plain async functions
+  - Shows deprecation warning on first use
+
+- **Renamed `multiTabSync` → `sync`** - Shorter, cleaner name
+  - `multiTabSync` still works but shows deprecation warning
+  - Will be removed in v0.4.0
+
+- **Simplified `logger` plugin options**
+  - Renamed `trackPerformance` → `performance`
+  - Deprecated rarely used options: `slowThreshold`, `includeTimestamp`, `maxDepth`
+
+### Changed
+
+- Test count increased from 502 to 596 tests (+94 form tests)
+- Bundle size maintained < 12 KB gzipped
+
+### Migration Guide
+
+See [UPGRADE-0.3.0.md](../../UPGRADES/UPGRADE-0.3.0.md) for detailed migration instructions.
+
 ## [0.2.9] - 2025-01-04
 
 ### Breaking Changes
@@ -466,7 +519,7 @@ This is a **cleanup release** that removes unnecessary code and simplifies APIs.
 
 ### Fixed
 - Updated package name from `svelte-reactor` to `svelte-reactor` across all documentation and examples
-- Fixed GitHub repository links to point to correct repository (P1kabu/svelte-reactor)
+- Fixed GitHub repository links to point to correct repository (svelte-reactor/core)
 - Removed references to non-existent `@svelte-dev/persist` package
 - Fixed GitHub Actions workflows to use correct package names
 - Updated root README to display correct project information

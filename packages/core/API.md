@@ -1,24 +1,23 @@
 # API Reference
 
-Complete API documentation for svelte-reactor v0.2.9.
+Complete API documentation for `@svelte-reactor/core` v0.3.0.
 
-## What's New in v0.2.9
+## What's New in v0.3.0
 
-🎉 **API Cleanup & Simplification** in v0.2.9:
+🎉 **Monorepo, Forms & Cleanup** in v0.3.0:
 
-- **🧹 Removed Deprecated APIs**: `.value`, `batch()`, `batchAll()`, `diff()` removed
-- **🚀 Simpler AsyncActions**: Removed built-in retry/debounce - use at API layer
-- **📄 New `arrayPagination()`**: Standalone pagination helper (separated from arrayActions)
-- **⚡ Cleaner Subscriptions**: Use `select()` instead of `subscribe({ selector })`
-- **🔧 IndexedDB Fix**: Added `onReady` callback for async data loading
-- **📦 Smaller Bundle**: 11.52 KB gzipped (down from 11.67 KB)
-- **✅ 505 tests**: Comprehensive test coverage
+- **📦 New Package Name**: `@svelte-reactor/core` (old `svelte-reactor` still works)
+- **📝 `createForm()` Helper**: Reactive forms with validation, async validators, draft persistence
+- **🔄 Renamed `multiTabSync`**: Now called `sync()` (old name deprecated)
+- **⚠️ Deprecated `asyncActions`**: Use plain async functions or wait for `createQuery()` in v0.4.0
+- **✅ 596 tests**: +94 new form tests including stress tests
 
-👉 See [v0.2.9 Upgrade](../../UPGRADES/UPGRADE-0.2.9.md) for complete changelog.
+👉 See [v0.3.0 Upgrade](../../UPGRADES/UPGRADE-0.3.0.md) for complete changelog.
 
 <details>
 <summary>📜 Previous Versions</summary>
 
+**v0.2.9**: API cleanup, removed deprecated APIs, new `arrayPagination()`
 **v0.2.8**: `.value` deprecation warning, complete docs
 **v0.2.7**: `select()` method, `ReactorError` class, async concurrency control
 **v0.2.5**: Selective subscriptions, computed stores, 25% smaller bundle
@@ -33,14 +32,15 @@ Complete API documentation for svelte-reactor v0.2.9.
 - [Plugins](#plugins)
   - [undoRedo](#undoredo)
   - [persist](#persist)
-  - [multiTabSync](#multitabsync) ✨ NEW in v0.2.5
+  - [sync](#sync) ✨ NEW in v0.3.0 (renamed from multiTabSync)
   - [logger](#logger)
 - [Helpers](#helpers)
   - [simpleStore](#simplestore)
   - [persistedStore](#persistedstore)
+  - [createForm](#createform) ✨ NEW in v0.3.0
   - [arrayActions](#arrayactions)
-  - [arrayPagination](#arraypagination) ✨ NEW in v0.2.9
-  - [asyncActions](#asyncactions)
+  - [arrayPagination](#arraypagination)
+  - [asyncActions](#asyncactions) ⚠️ DEPRECATED
 - [Svelte Store Utilities](#svelte-store-utilities)
   - [derived](#derived)
   - [get](#get)
@@ -1002,12 +1002,14 @@ logger({
 - **Debouncing**: Configurable debounce to reduce write frequency
 - **Migrations**: Schema versioning for backwards compatibility
 
-### multiTabSync
+### sync
 
-**NEW in v0.2.5** - Synchronize state across browser tabs and windows in real-time.
+**NEW in v0.3.0** - Synchronize state across browser tabs and windows in real-time.
+
+> **Renamed in v0.3.0:** Previously called `multiTabSync`. The old name still works but shows a deprecation warning.
 
 ```typescript
-function multiTabSync<T extends object>(
+function sync<T extends object>(
   options?: SyncOptions
 ): ReactorPlugin<T>
 ```
@@ -1033,8 +1035,8 @@ interface SyncOptions {
 **Example:**
 
 ```typescript
-import { createReactor } from 'svelte-reactor';
-import { persist, multiTabSync } from 'svelte-reactor/plugins';
+import { createReactor } from '@svelte-reactor/core';
+import { persist, sync } from '@svelte-reactor/core/plugins';
 
 // Basic usage - sync across tabs
 const counter = createReactor(
@@ -1042,8 +1044,8 @@ const counter = createReactor(
   {
     name: 'counter',
     plugins: [
-      persist({ key: 'counter' }),       // Persist to localStorage
-      multiTabSync({ key: 'counter' })   // Sync across tabs
+      persist({ key: 'counter' }),  // Persist to localStorage
+      sync({ key: 'counter' })      // Sync across tabs
     ],
   }
 );
@@ -1067,7 +1069,7 @@ const cart = createReactor(
         key: 'cart',
         storage: 'localStorage'
       }),
-      multiTabSync({
+      sync({
         key: 'cart',
         debounce: 200  // Reduce sync frequency
       })
@@ -1090,7 +1092,7 @@ cart.update(s => {
 // 1. Multi-tab dashboards
 const dashboard = createReactor(dashboardState, {
   plugins: [
-    multiTabSync({ key: 'dashboard' })
+    sync({ key: 'dashboard' })
   ]
 });
 
@@ -1098,7 +1100,7 @@ const dashboard = createReactor(dashboardState, {
 const editor = createReactor(editorState, {
   plugins: [
     persist({ key: 'draft' }),
-    multiTabSync({ key: 'draft', debounce: 500 })
+    sync({ key: 'draft', debounce: 500 })
   ]
 });
 
@@ -1106,7 +1108,7 @@ const editor = createReactor(editorState, {
 const auth = createReactor({ user: null, token: null }, {
   plugins: [
     persist({ key: 'auth', omit: ['token'] }),
-    multiTabSync({ key: 'auth' })
+    sync({ key: 'auth' })
   ]
 });
 
@@ -1133,13 +1135,13 @@ auth.update(s => { s.user = null; s.token = null; });
 
 ```typescript
 // Optimize for high-frequency updates
-multiTabSync({
+sync({
   key: 'realtime-data',
   debounce: 300  // Max 3 syncs per second
 })
 
 // Optimize for instant sync
-multiTabSync({
+sync({
   key: 'critical-state',
   debounce: 0    // Immediate sync
 })
@@ -1156,7 +1158,7 @@ const store = createReactor(state, {
       storage: 'localStorage',
       debounce: 500
     }),
-    multiTabSync({
+    sync({
       key: 'my-app',  // Same key!
       debounce: 100   // Faster sync than persist
     })
@@ -1165,7 +1167,7 @@ const store = createReactor(state, {
 
 // Why?
 // - persist saves to storage (slow, debounced)
-// - multiTabSync broadcasts changes (fast)
+// - sync broadcasts changes (fast)
 // - Other tabs receive broadcast immediately
 // - Then load from storage on refresh
 ```
@@ -1347,6 +1349,316 @@ const currentTheme = settings.get().theme;
 // ✅ In Svelte components, use $ syntax for reactive access
 // {$settings.theme}
 ```
+
+---
+
+### createForm
+
+**NEW in v0.3.0** - Reactive form management with validation, async validators, and draft persistence.
+
+```typescript
+import { createForm } from '@svelte-reactor/core/helpers';
+
+function createForm<T extends Record<string, any>>(
+  options: FormOptions<T>
+): Form<T>
+```
+
+**FormOptions:**
+
+```typescript
+interface FormOptions<T extends Record<string, any>> {
+  // Required: Initial form values
+  initialValues: T;
+
+  // Optional: Sync validation rules per field
+  // Each rule returns true for valid, or error message string for invalid
+  validate?: {
+    [K in keyof T]?: ValidationRule<T[K]>;
+  };
+
+  // Optional: Async validation rules (run after sync validation passes)
+  validateAsync?: {
+    [K in keyof T]?: (value: T[K], values: T) => Promise<true | string>;
+  };
+
+  // Optional: Submit handler
+  onSubmit?: (values: T) => void | Promise<void>;
+
+  // When to validate fields
+  // 'change' (default) | 'blur' | 'submit'
+  validateOn?: 'change' | 'blur' | 'submit';
+
+  // Storage key for draft persistence to localStorage
+  persistDraft?: string;
+
+  // Debounce draft persistence in milliseconds (default: 500)
+  persistDebounce?: number;
+
+  // Custom transform before persisting
+  persistTransform?: (values: T) => Partial<T>;
+}
+
+// Validation rule types
+type ValidationFn<T> = (value: T, values: Record<string, any>) => true | string;
+type ValidationRule<T> = ValidationFn<T> | ValidationFn<T>[];
+```
+
+**Returns:** `Form<T>`
+
+**Form Interface:**
+
+```typescript
+interface Form<T extends Record<string, any>> {
+  // === Reactive State ===
+  readonly values: T;                           // Current form values
+  readonly initialValues: T;                    // Initial values (for reset)
+  readonly touched: Record<keyof T, boolean>;   // Fields that were blurred
+  readonly dirty: Record<keyof T, boolean>;     // Fields modified from initial
+  readonly errors: Record<keyof T, string>;     // Validation error messages
+  readonly isValid: boolean;                    // True if no errors
+  readonly isDirty: boolean;                    // True if any field modified
+  readonly isSubmitting: boolean;               // True during submit
+  readonly submitCount: number;                 // How many times submit was called
+  readonly submitError: string | null;          // Error from last submit
+
+  // === Methods ===
+  setField<K extends keyof T>(field: K, value: T[K]): void;
+  setFields(values: Partial<T>): void;
+  setError<K extends keyof T>(field: K, error: string): void;
+  clearError<K extends keyof T>(field: K): void;
+  setTouched<K extends keyof T>(field: K): void;
+  validate(): Promise<boolean>;
+  validateField<K extends keyof T>(field: K): Promise<boolean>;
+  submit(): Promise<void>;
+  reset(values?: Partial<T>): void;
+  field<K extends keyof T>(name: K): FieldProps<K, T[K]>;
+  useField: <K extends keyof T>(node: HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement, name: K) => { destroy: () => void };
+  destroy(): void;
+}
+```
+
+**Basic Example:**
+
+```typescript
+import { createForm } from '@svelte-reactor/core/helpers';
+
+const form = createForm({
+  initialValues: {
+    email: '',
+    password: '',
+    rememberMe: false
+  },
+
+  validate: {
+    email: [
+      (v) => !!v || 'Email is required',
+      (v) => v.includes('@') || 'Invalid email format'
+    ],
+    password: (v) => v.length >= 8 || 'Password must be at least 8 characters'
+  },
+
+  onSubmit: async (values) => {
+    await api.login(values);
+  },
+
+  validateOn: 'blur',
+  persistDraft: 'login-form'
+});
+
+// Set field value
+form.setField('email', 'user@example.com');
+
+// Validate entire form
+const isValid = await form.validate();
+
+// Submit form
+await form.submit();
+
+// Reset to initial values
+form.reset();
+```
+
+**With Async Validation:**
+
+```typescript
+const form = createForm({
+  initialValues: { email: '', username: '' },
+
+  validate: {
+    email: (v) => v.includes('@') || 'Invalid email',
+    username: (v) => v.length >= 3 || 'Username too short'
+  },
+
+  // Async validation runs after sync validation passes
+  validateAsync: {
+    email: async (value) => {
+      const exists = await api.checkEmailExists(value);
+      return !exists || 'Email already registered';
+    },
+    username: async (value) => {
+      const available = await api.checkUsernameAvailable(value);
+      return available || 'Username taken';
+    }
+  },
+
+  onSubmit: async (values) => {
+    await api.register(values);
+  }
+});
+```
+
+**Svelte Component Usage:**
+
+```svelte
+<script lang="ts">
+  import { createForm } from '@svelte-reactor/core/helpers';
+  import { onDestroy } from 'svelte';
+
+  const form = createForm({
+    initialValues: { email: '', password: '' },
+    validate: {
+      email: (v) => v.includes('@') || 'Invalid email',
+      password: (v) => v.length >= 8 || 'Min 8 characters'
+    },
+    onSubmit: async (values) => await login(values),
+    validateOn: 'blur',
+    persistDraft: 'login-form'
+  });
+
+  onDestroy(() => form.destroy());
+</script>
+
+<form onsubmit={(e) => { e.preventDefault(); form.submit(); }}>
+  <div>
+    <input
+      type="email"
+      bind:value={form.values.email}
+      onblur={() => form.setTouched('email')}
+    />
+    {#if form.touched.email && form.errors.email}
+      <span class="error">{form.errors.email}</span>
+    {/if}
+  </div>
+
+  <div>
+    <input
+      type="password"
+      bind:value={form.values.password}
+      onblur={() => form.setTouched('password')}
+    />
+    {#if form.touched.password && form.errors.password}
+      <span class="error">{form.errors.password}</span>
+    {/if}
+  </div>
+
+  <label>
+    <input type="checkbox" bind:checked={form.values.rememberMe} />
+    Remember me
+  </label>
+
+  <button type="submit" disabled={!form.isValid || form.isSubmitting}>
+    {form.isSubmitting ? 'Logging in...' : 'Login'}
+  </button>
+
+  {#if form.submitError}
+    <div class="error">{form.submitError}</div>
+  {/if}
+</form>
+```
+
+**Using field() Helper:**
+
+```svelte
+<script lang="ts">
+  const form = createForm({
+    initialValues: { email: '', password: '' },
+    validate: {
+      email: (v) => v.includes('@') || 'Invalid email',
+      password: (v) => v.length >= 8 || 'Min 8 characters'
+    },
+    onSubmit: async (values) => await login(values)
+  });
+</script>
+
+<!-- Automatic binding with field() -->
+<input type="email" {...form.field('email')} />
+<input type="password" {...form.field('password')} />
+```
+
+**Using useField Svelte Action (NEW):**
+
+The `useField` action provides cleaner form binding with Svelte's `use:` directive:
+
+```svelte
+<script lang="ts">
+  const form = createForm({
+    initialValues: { email: '', password: '', rememberMe: false },
+    validate: {
+      email: (v) => v.includes('@') || 'Invalid email',
+      password: (v) => v.length >= 8 || 'Min 8 characters'
+    },
+    onSubmit: async (values) => await login(values)
+  });
+</script>
+
+<!-- Cleaner syntax with useField action -->
+<input type="email" use:form.useField={'email'} />
+<input type="password" use:form.useField={'password'} />
+<input type="checkbox" use:form.useField={'rememberMe'} />
+<select use:form.useField={'country'}>...</select>
+<textarea use:form.useField={'message'} />
+```
+
+| Method | Syntax | Best For |
+|--------|--------|----------|
+| `field()` | `{...form.field('name')}` | Custom components, spread props |
+| `useField` | `use:form.useField={'name'}` | Native `<input>`, `<select>`, `<textarea>` |
+
+**Draft Persistence:**
+
+```typescript
+const form = createForm({
+  initialValues: { email: '', message: '' },
+
+  // Save draft to localStorage under 'contact-form' key
+  persistDraft: 'contact-form',
+
+  // Debounce saving to every 500ms (default)
+  persistDebounce: 500,
+
+  // Only persist certain fields
+  persistTransform: (values) => ({
+    email: values.email,
+    message: values.message
+    // Don't persist sensitive data
+  }),
+
+  onSubmit: async (values) => {
+    await api.sendContact(values);
+    // Draft is automatically cleared on successful submit
+  }
+});
+
+// Draft is loaded on form creation
+// Draft is cleared on form.reset() or successful submit
+```
+
+**Features:**
+
+- **Reactive state**: All form state is reactive (Svelte 5 runes)
+- **Sync + async validation**: Validate immediately or on server
+- **Touched/dirty tracking**: Show errors only after user interaction
+- **Draft persistence**: Auto-save work to localStorage
+- **Submit handling**: Loading state and error capture
+- **Type-safe**: Full TypeScript inference
+- **94 tests**: Comprehensive test coverage including stress tests
+
+**Performance:**
+
+- 1000 rapid field updates: < 100ms
+- 100 fields with validation: < 50ms
+- Memory efficient: No leaks on repeated create/destroy
 
 ---
 
@@ -1680,6 +1992,8 @@ pagination.getPage();
 ---
 
 ### asyncActions
+
+> ⚠️ **DEPRECATED in v0.3.0:** This helper will be removed in v0.4.0. Use plain async functions or wait for `createQuery()` in v0.4.0. See [Migration Guide](#migration-guide) for alternatives.
 
 Create async actions helper with automatic loading/error state management.
 

@@ -38,11 +38,15 @@ export function createLoggerMiddleware<T extends object>(
   const {
     collapsed = false,
     filter,
-    trackPerformance = false,
+    performance: perfOption,
+    trackPerformance, // deprecated
     slowThreshold,
     includeTimestamp = false,
     maxDepth = 3,
   } = options ?? {};
+
+  // Support both new 'performance' and deprecated 'trackPerformance'
+  const enablePerformance = perfOption ?? trackPerformance ?? false;
 
   // Track timing if performance tracking is enabled
   const timings = new Map<string, number>();
@@ -51,7 +55,7 @@ export function createLoggerMiddleware<T extends object>(
     name: 'logger',
 
     onBeforeUpdate(prevState, nextState, action) {
-      if (trackPerformance && action) {
+      if (enablePerformance && action) {
         timings.set(action, performance.now());
       }
     },
@@ -69,7 +73,7 @@ export function createLoggerMiddleware<T extends object>(
       let duration: number | null = null;
       let isSlowAction = false;
 
-      if (trackPerformance && action) {
+      if (enablePerformance && action) {
         const startTime = timings.get(action);
         if (startTime !== undefined) {
           duration = performance.now() - startTime;

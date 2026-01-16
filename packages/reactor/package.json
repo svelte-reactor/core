@@ -1,13 +1,10 @@
 {
   "name": "svelte-reactor",
-  "version": "0.2.9",
-  "description": "Powerful reactive state management for Svelte 5 with full Svelte stores API compatibility, undo/redo, middleware, persistence, and DevTools. Production-ready with SSR support.",
+  "version": "0.3.0",
+  "description": "Compatibility wrapper for @svelte-reactor/core. Use @svelte-reactor/core for new projects.",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
-  "bin": {
-    "svelte-reactor": "./cli/index.js"
-  },
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -15,112 +12,50 @@
       "default": "./dist/index.js"
     },
     "./plugins": {
-      "types": "./dist/plugins/index.d.ts",
-      "svelte": "./dist/plugins/index.js",
-      "default": "./dist/plugins/index.js"
+      "types": "@svelte-reactor/core/plugins",
+      "default": "@svelte-reactor/core/plugins"
     },
     "./helpers": {
-      "types": "./dist/helpers/index.d.ts",
-      "svelte": "./dist/helpers/index.js",
-      "default": "./dist/helpers/index.js"
+      "types": "@svelte-reactor/core/helpers",
+      "default": "@svelte-reactor/core/helpers"
     },
     "./devtools": {
-      "types": "./dist/devtools/devtools.d.ts",
-      "svelte": "./dist/devtools/devtools.js",
-      "default": "./dist/devtools/devtools.js"
+      "types": "@svelte-reactor/core/devtools",
+      "default": "@svelte-reactor/core/devtools"
     },
     "./utils": {
-      "types": "./dist/utils/index.d.ts",
-      "svelte": "./dist/utils/index.js",
-      "default": "./dist/utils/index.js"
+      "types": "@svelte-reactor/core/utils",
+      "default": "@svelte-reactor/core/utils"
     }
   },
   "files": [
     "dist",
-    "cli",
-    "templates",
-    "README.md",
-    "QUICK_START.md",
-    "MIGRATION.md",
-    "API.md",
-    "EXAMPLES.md",
-    "PERFORMANCE.md",
-    "LICENSE"
+    "README.md"
   ],
   "scripts": {
-    "dev": "vite build --watch",
-    "build": "vite build",
-    "clean": "rm -rf dist *.tsbuildinfo",
-    "test": "vitest run",
-    "test:watch": "vitest",
-    "test:ui": "vitest --ui",
-    "bench": "vitest bench --run",
-    "typecheck": "tsc --noEmit",
-    "lint": "tsc --noEmit",
-    "check": "pnpm typecheck && pnpm test",
-    "prepublishOnly": "pnpm clean && pnpm check && pnpm build"
+    "build": "tsc",
+    "prepublishOnly": "pnpm build"
   },
   "keywords": [
     "svelte",
     "svelte5",
-    "svelte-5",
-    "runes",
     "state-management",
-    "reactive",
-    "store",
-    "stores",
-    "writable",
-    "svelte-stores",
-    "undo",
-    "redo",
-    "middleware",
-    "devtools",
-    "persistence",
-    "persist",
-    "localStorage",
-    "time-travel",
-    "sveltekit",
-    "ssr",
-    "typescript",
-    "helpers",
-    "utilities",
-    "cli",
-    "ai",
-    "claude",
-    "cursor",
-    "copilot",
-    "code-assistant"
+    "reactive"
   ],
   "author": "Svelte Reactor Contributors",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/P1kabu/svelte-reactor.git",
+    "url": "git+https://github.com/svelte-reactor/core.git",
     "directory": "packages/reactor"
   },
-  "bugs": {
-    "url": "https://github.com/P1kabu/svelte-reactor/issues"
-  },
-  "homepage": "https://github.com/P1kabu/svelte-reactor#readme",
   "peerDependencies": {
     "svelte": "^5.0.0"
   },
   "dependencies": {
-    "kleur": "^4.1.5",
-    "lz-string": "^1.5.0",
-    "prompts": "^2.4.2",
-    "sade": "^1.8.1"
+    "@svelte-reactor/core": "workspace:^"
   },
   "devDependencies": {
-    "@sveltejs/vite-plugin-svelte": "^4.0.0",
-    "@vitest/coverage-v8": "^3.2.4",
-    "@vitest/ui": "^3.2.4",
-    "fake-indexeddb": "^6.2.4",
-    "jsdom": "^24.0.0",
-    "svelte": "^5.0.0",
-    "typescript": "^5.3.3",
-    "vite": "^5.0.0",
-    "vite-plugin-dts": "^4.5.4",
-    "vitest": "^3.2.4"
+    "typescript": "^5.3.3"
   }
 }

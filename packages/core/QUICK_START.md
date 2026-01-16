@@ -3,6 +3,10 @@
 ## Installation
 
 ```bash
+# Recommended (v0.3.0+)
+npm install @svelte-reactor/core
+
+# Or use the legacy package name (still works)
 npm install svelte-reactor
 ```
 
@@ -11,7 +15,7 @@ npm install svelte-reactor
 ### Simple Counter Store
 
 ```typescript
-import { simpleStore } from 'svelte-reactor';
+import { simpleStore } from '@svelte-reactor/core';
 
 // Create a simple writable store
 export const counter = simpleStore(0);
@@ -38,7 +42,7 @@ console.log(counter.get()); // 1
 ### Persisted Store (Auto-save to localStorage)
 
 ```typescript
-import { persistedStore } from 'svelte-reactor';
+import { persistedStore } from '@svelte-reactor/core';
 
 // Simple persisted counter
 export const counter = persistedStore('counter', 0);
@@ -54,8 +58,8 @@ export const settings = persistedStore('app-settings', { theme: 'dark' }, {
 ### Full Reactor with Undo/Redo
 
 ```typescript
-import { createReactor } from 'svelte-reactor';
-import { undoRedo, logger } from 'svelte-reactor/plugins';
+import { createReactor } from '@svelte-reactor/core';
+import { undoRedo, logger } from '@svelte-reactor/core/plugins';
 
 const store = createReactor(
   { count: 0, name: 'John' },
@@ -122,7 +126,7 @@ store.redo();
 
 ```svelte
 <script>
-  import { createReactor } from 'svelte-reactor';
+  import { createReactor } from '@svelte-reactor/core';
 
   const store = createReactor({ count: 0 });
 
@@ -140,7 +144,7 @@ store.redo();
 ### Selective Persistence (Security)
 
 ```typescript
-import { persistedStore } from 'svelte-reactor';
+import { persistedStore } from '@svelte-reactor/core';
 
 const userStore = persistedStore('user', {
   name: 'John',
@@ -176,7 +180,7 @@ const store = persistedStore('data', initialValue, {
 ### Non-Svelte Context (onChange callback)
 
 ```typescript
-import { createReactor } from 'svelte-reactor';
+import { createReactor } from '@svelte-reactor/core';
 
 // Use in plain JavaScript/TypeScript (no Svelte needed)
 const store = createReactor(
@@ -194,7 +198,7 @@ store.update(s => { s.count++; });
 ### SSR-Safe (Server-Side Rendering)
 
 ```typescript
-import { persistedStore } from 'svelte-reactor';
+import { persistedStore } from '@svelte-reactor/core';
 
 // Automatically handles SSR - persistence disabled on server
 export const settings = persistedStore('settings', { theme: 'dark' });
@@ -207,8 +211,8 @@ export const settings = persistedStore('settings', { theme: 'dark' });
 ### Todo List
 
 ```typescript
-import { persistedReactor } from 'svelte-reactor';
-import { undoRedo } from 'svelte-reactor/plugins';
+import { persistedReactor } from '@svelte-reactor/core';
+import { undoRedo } from '@svelte-reactor/core/plugins';
 
 interface Todo {
   id: number;
@@ -244,38 +248,91 @@ export function toggleTodo(id: number) {
 }
 ```
 
-### Form Management
+### Form Management (NEW in v0.3.0)
 
 ```typescript
-import { createReactor } from 'svelte-reactor';
+import { createForm } from '@svelte-reactor/core/helpers';
 
-export const formStore = createReactor({
-  values: { email: '', password: '' },
-  errors: {} as Record<string, string>,
-  touched: {} as Record<string, boolean>,
-  isSubmitting: false,
+// Create a reactive form with validation
+const form = createForm({
+  initialValues: { email: '', password: '' },
+  validate: {
+    email: [
+      (v) => !!v || 'Email is required',
+      (v) => v.includes('@') || 'Invalid email'
+    ],
+    password: (v) => v.length >= 6 || 'Min 6 characters'
+  },
+  onSubmit: async (values) => {
+    await api.login(values);
+  },
+  validateOn: 'blur',
+  persistDraft: 'login-form' // Auto-save draft to localStorage
 });
 
-export function setFieldValue(field: string, value: string) {
-  formStore.update(state => {
-    state.values[field] = value;
-    state.touched[field] = true;
-  });
-}
+// Usage
+form.setField('email', 'user@example.com');
+await form.validate();
+await form.submit();
+form.reset();
+```
 
-export function validate() {
-  formStore.update(state => {
-    state.errors = {};
-    if (!state.values.email) {
-      state.errors.email = 'Required';
-    }
-    if (state.values.password.length < 6) {
-      state.errors.password = 'Min 6 characters';
-    }
-  });
+**In Svelte component:**
 
-  return Object.keys(formStore.state.errors).length === 0;
-}
+```svelte
+<script lang="ts">
+  import { createForm } from '@svelte-reactor/core/helpers';
+
+  const form = createForm({
+    initialValues: { email: '', password: '' },
+    validate: {
+      email: (v) => v.includes('@') || 'Invalid email',
+      password: (v) => v.length >= 6 || 'Min 6 characters'
+    },
+    onSubmit: async (values) => await login(values)
+  });
+</script>
+
+<form onsubmit={(e) => { e.preventDefault(); form.submit(); }}>
+  <input
+    type="email"
+    bind:value={form.values.email}
+    onblur={() => form.setTouched('email')}
+  />
+  {#if form.touched.email && form.errors.email}
+    <span class="error">{form.errors.email}</span>
+  {/if}
+
+  <button disabled={!form.isValid || form.isSubmitting}>
+    {form.isSubmitting ? 'Loading...' : 'Submit'}
+  </button>
+</form>
+```
+
+**Using useField action (cleaner syntax):**
+
+```svelte
+<script lang="ts">
+  import { createForm } from '@svelte-reactor/core/helpers';
+
+  const form = createForm({
+    initialValues: { email: '', password: '', rememberMe: false },
+    validate: {
+      email: (v) => v.includes('@') || 'Invalid email',
+      password: (v) => v.length >= 6 || 'Min 6 characters'
+    },
+    onSubmit: async (values) => await login(values)
+  });
+</script>
+
+<form onsubmit={(e) => { e.preventDefault(); form.submit(); }}>
+  <!-- useField action auto-handles binding and touch -->
+  <input type="email" use:form.useField={'email'} />
+  <input type="password" use:form.useField={'password'} />
+  <input type="checkbox" use:form.useField={'rememberMe'} /> Remember me
+
+  <button disabled={!form.isValid || form.isSubmitting}>Submit</button>
+</form>
 ```
 
 ## API Comparison
@@ -292,7 +349,8 @@ export function validate() {
 
 ## Next Steps
 
-**📚 Comprehensive Guides (v0.2.5):**
+**📚 Comprehensive Guides:**
+- 📝 [Form Helper Guide](./FORMS.md) - Complete createForm() documentation (NEW in v0.3.0)
 - 📖 [Plugin Development Guide](./PLUGINS.md) - Create custom plugins with 4 working examples
 - 🚀 [Performance Optimization Guide](./PERFORMANCE_GUIDE.md) - Optimization strategies with 5 demos
 - 🛡️ [Error Handling Guide](./ERROR_HANDLING.md) - Error patterns with 20 examples
@@ -300,4 +358,5 @@ export function validate() {
 **📖 Core Documentation:**
 - [Full API Reference](./API.md) - Complete API documentation
 - [Migration Guide](./MIGRATION.md) - Migrate from other state libraries
+- [Upgrade to v0.3.0](../../UPGRADES/UPGRADE-0.3.0.md) - Migration guide for v0.3.0
 - [Examples](../../examples) - Real-world usage examples

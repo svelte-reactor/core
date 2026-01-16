@@ -2,8 +2,8 @@
 
 ## Quick Reference
 
-**Package:** `svelte-reactor` v0.2.9
-**Purpose:** Reactive state management for Svelte 5 with undo/redo, persistence, plugins
+**Package:** `@svelte-reactor/core` v0.3.0
+**Purpose:** Reactive state management for Svelte 5 with undo/redo, persistence, forms, plugins
 
 ## Documentation Links
 
@@ -16,13 +16,19 @@
 ## Imports
 
 ```typescript
-// Core
-import { createReactor, simpleStore, persistedStore, computedStore } from 'svelte-reactor';
-import { arrayActions, arrayPagination, asyncActions } from 'svelte-reactor';
-import { derived, get, readonly, isEqual } from 'svelte-reactor';
+// NEW: @svelte-reactor/core (recommended)
+import { createReactor, simpleStore, persistedStore, computedStore } from '@svelte-reactor/core';
+import { arrayActions, arrayPagination } from '@svelte-reactor/core';
+import { derived, get, readonly, isEqual } from '@svelte-reactor/core';
 
 // Plugins
-import { undoRedo, persist, logger, sync } from 'svelte-reactor/plugins';
+import { undoRedo, persist, logger, sync } from '@svelte-reactor/core/plugins';
+
+// Helpers (including forms)
+import { createForm } from '@svelte-reactor/core/helpers';
+
+// OLD: svelte-reactor (still works)
+import { createReactor } from 'svelte-reactor';
 ```
 
 ## Core API
@@ -110,7 +116,7 @@ pagination.prevPage();
 pagination.setPage(3);
 ```
 
-### asyncActions
+### asyncActions (DEPRECATED)
 ```typescript
 const api = asyncActions(store, {
   fetchData: async (id: string) => {
@@ -125,6 +131,47 @@ const api = asyncActions(store, {
 
 await api.fetchData('123');
 api.fetchData.cancel();
+```
+
+### createForm (NEW v0.3.0)
+```typescript
+import { createForm } from '@svelte-reactor/core/helpers';
+
+const form = createForm({
+  initialValues: { email: '', password: '' },
+  validate: {
+    email: (v) => v.includes('@') || 'Invalid email',
+    password: (v) => v.length >= 8 || 'Min 8 chars'
+  },
+  validateAsync: {
+    email: async (v) => !(await checkExists(v)) || 'Email taken'
+  },
+  onSubmit: async (values) => await api.login(values),
+  validateOn: 'blur',       // 'change' | 'blur' | 'submit'
+  persistDraft: 'login'     // Auto-save to localStorage
+});
+
+// State (reactive)
+form.values / form.errors / form.touched / form.dirty
+form.isValid / form.isDirty / form.isSubmitting / form.submitError
+
+// Methods
+form.setField('email', 'user@example.com');
+form.setTouched('email');
+await form.validate();
+await form.submit();
+form.reset();
+form.destroy();
+```
+
+### useField action (cleaner form binding)
+```svelte
+<!-- Instead of bind:value + onblur, use the useField action -->
+<input type="email" use:form.useField={'email'} />
+<input type="password" use:form.useField={'password'} />
+<input type="checkbox" use:form.useField={'rememberMe'} />
+<select use:form.useField={'country'}>...</select>
+<textarea use:form.useField={'message'} />
 ```
 
 ## Plugins

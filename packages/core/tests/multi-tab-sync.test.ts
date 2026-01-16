@@ -4,7 +4,7 @@
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { createReactor } from '../src/core/reactor.svelte.js';
-import { multiTabSync } from '../src/plugins/sync-plugin.js';
+import { sync, multiTabSync } from '../src/plugins/sync-plugin.js';
 import { persist } from '../src/plugins/persist-plugin.js';
 
 // Mock BroadcastChannel
@@ -52,7 +52,7 @@ class MockBroadcastChannel {
   }
 }
 
-describe('multiTabSync Plugin', () => {
+describe('sync Plugin', () => {
   beforeEach(() => {
     // Mock BroadcastChannel
     (global as any).BroadcastChannel = MockBroadcastChannel;
@@ -92,11 +92,11 @@ describe('multiTabSync Plugin', () => {
   });
 
   describe('Basic Functionality', () => {
-    it('should create multiTabSync plugin', () => {
-      const plugin = multiTabSync({ key: 'test' });
+    it('should create sync plugin', () => {
+      const plugin = sync({ key: 'test' });
 
       expect(plugin).toBeDefined();
-      expect(plugin.name).toBe('multiTabSync');
+      expect(plugin.name).toBe('sync');
       expect(plugin.init).toBeDefined();
       expect(plugin.destroy).toBeDefined();
     });
@@ -107,7 +107,7 @@ describe('multiTabSync Plugin', () => {
         { count: 0 },
         {
           name: 'counter',
-          plugins: [multiTabSync({ key: 'counter', debounce: 0 })],
+          plugins: [sync({ key: 'counter', debounce: 0 })],
         }
       );
 
@@ -115,7 +115,7 @@ describe('multiTabSync Plugin', () => {
         { count: 0 },
         {
           name: 'counter',
-          plugins: [multiTabSync({ key: 'counter', debounce: 0 })],
+          plugins: [sync({ key: 'counter', debounce: 0 })],
         }
       );
 
@@ -141,7 +141,7 @@ describe('multiTabSync Plugin', () => {
         { count: 0 },
         {
           name: 'counter',
-          plugins: [multiTabSync({ key: 'counter', debounce: 0 })],
+          plugins: [sync({ key: 'counter', debounce: 0 })],
         }
       );
 
@@ -149,7 +149,7 @@ describe('multiTabSync Plugin', () => {
         { count: 0 },
         {
           name: 'counter',
-          plugins: [multiTabSync({ key: 'counter', debounce: 0 })],
+          plugins: [sync({ key: 'counter', debounce: 0 })],
         }
       );
 
@@ -157,7 +157,7 @@ describe('multiTabSync Plugin', () => {
         { count: 0 },
         {
           name: 'counter',
-          plugins: [multiTabSync({ key: 'counter', debounce: 0 })],
+          plugins: [sync({ key: 'counter', debounce: 0 })],
         }
       );
 
@@ -186,7 +186,7 @@ describe('multiTabSync Plugin', () => {
         { value: 'a' },
         {
           name: 'myStore',
-          plugins: [multiTabSync({ debounce: 0 })],
+          plugins: [sync({ debounce: 0 })],
         }
       );
 
@@ -194,7 +194,7 @@ describe('multiTabSync Plugin', () => {
         { value: 'a' },
         {
           name: 'myStore',
-          plugins: [multiTabSync({ debounce: 0 })],
+          plugins: [sync({ debounce: 0 })],
         }
       );
 
@@ -219,14 +219,14 @@ describe('multiTabSync Plugin', () => {
       const storeA = createReactor(
         { count: 0 },
         {
-          plugins: [multiTabSync({ key: 'storeA', debounce: 0 })],
+          plugins: [sync({ key: 'storeA', debounce: 0 })],
         }
       );
 
       const storeB = createReactor(
         { count: 0 },
         {
-          plugins: [multiTabSync({ key: 'storeB', debounce: 0 })],
+          plugins: [sync({ key: 'storeB', debounce: 0 })],
         }
       );
 
@@ -252,14 +252,14 @@ describe('multiTabSync Plugin', () => {
       const tab1 = createReactor(
         { count: 0 },
         {
-          plugins: [multiTabSync({ key: 'counter', debounce: 50 })],
+          plugins: [sync({ key: 'counter', debounce: 50 })],
         }
       );
 
       const tab2 = createReactor(
         { count: 0 },
         {
-          plugins: [multiTabSync({ key: 'counter', debounce: 50 })],
+          plugins: [sync({ key: 'counter', debounce: 50 })],
         }
       );
 
@@ -291,12 +291,12 @@ describe('multiTabSync Plugin', () => {
 
     it('should validate debounce option', () => {
       expect(() => {
-        multiTabSync({ debounce: -1 });
-      }).toThrow('[multiTabSync] options.debounce must be a non-negative number');
+        sync({ debounce: -1 });
+      }).toThrow('[sync] options.debounce must be a non-negative number');
 
       expect(() => {
-        multiTabSync({ debounce: 'invalid' as any });
-      }).toThrow('[multiTabSync] options.debounce must be a non-negative number');
+        sync({ debounce: 'invalid' as any });
+      }).toThrow('[sync] options.debounce must be a non-negative number');
     });
   });
 
@@ -320,7 +320,7 @@ describe('multiTabSync Plugin', () => {
           },
         },
         {
-          plugins: [multiTabSync({ key: 'user', debounce: 0 })],
+          plugins: [sync({ key: 'user', debounce: 0 })],
         }
       );
 
@@ -332,7 +332,7 @@ describe('multiTabSync Plugin', () => {
           },
         },
         {
-          plugins: [multiTabSync({ key: 'user', debounce: 0 })],
+          plugins: [sync({ key: 'user', debounce: 0 })],
         }
       );
 
@@ -354,14 +354,14 @@ describe('multiTabSync Plugin', () => {
       const tab1 = createReactor(
         { items: [1, 2, 3] },
         {
-          plugins: [multiTabSync({ key: 'list', debounce: 0 })],
+          plugins: [sync({ key: 'list', debounce: 0 })],
         }
       );
 
       const tab2 = createReactor(
         { items: [1, 2, 3] },
         {
-          plugins: [multiTabSync({ key: 'list', debounce: 0 })],
+          plugins: [sync({ key: 'list', debounce: 0 })],
         }
       );
 
@@ -387,7 +387,7 @@ describe('multiTabSync Plugin', () => {
         {
           plugins: [
             persist({ key: 'synced-counter', storage: 'memory' }),
-            multiTabSync({ key: 'synced-counter', debounce: 0 }),
+            sync({ key: 'synced-counter', debounce: 0 }),
           ],
         }
       );
@@ -397,7 +397,7 @@ describe('multiTabSync Plugin', () => {
         {
           plugins: [
             persist({ key: 'synced-counter', storage: 'memory' }),
-            multiTabSync({ key: 'synced-counter', debounce: 0 }),
+            sync({ key: 'synced-counter', debounce: 0 }),
           ],
         }
       );
@@ -433,14 +433,14 @@ describe('multiTabSync Plugin', () => {
       const tab1 = createReactor(
         { count: 0 },
         {
-          plugins: [multiTabSync({ key: 'counter', debounce: 0 })],
+          plugins: [sync({ key: 'counter', debounce: 0 })],
         }
       );
 
       const tab2 = createReactor(
         { count: 0 },
         {
-          plugins: [multiTabSync({ key: 'counter', debounce: 0 })],
+          plugins: [sync({ key: 'counter', debounce: 0 })],
         }
       );
 
@@ -473,7 +473,7 @@ describe('multiTabSync Plugin', () => {
       const reactor = createReactor(
         { count: 0 },
         {
-          plugins: [multiTabSync({ key: 'test' })],
+          plugins: [sync({ key: 'test' })],
         }
       );
 
@@ -490,14 +490,14 @@ describe('multiTabSync Plugin', () => {
       const tab1 = createReactor(
         { count: 0 },
         {
-          plugins: [multiTabSync({ key: 'counter', debounce: 0 })],
+          plugins: [sync({ key: 'counter', debounce: 0 })],
         }
       );
 
       const tab2 = createReactor(
         { count: 0 },
         {
-          plugins: [multiTabSync({ key: 'counter', debounce: 0 })],
+          plugins: [sync({ key: 'counter', debounce: 0 })],
         }
       );
 
@@ -530,7 +530,7 @@ describe('multiTabSync Plugin', () => {
         { count: 0 },
         {
           name: 'fallback',
-          plugins: [multiTabSync({ key: 'fallback', debounce: 0 })],
+          plugins: [sync({ key: 'fallback', debounce: 0 })],
         }
       );
 
@@ -545,10 +545,10 @@ describe('multiTabSync Plugin', () => {
     });
 
     it('should gracefully handle when broadcast is disabled', () => {
-      const plugin = multiTabSync({ broadcast: false, key: 'test' });
+      const plugin = sync({ broadcast: false, key: 'test' });
 
       expect(plugin).toBeDefined();
-      expect(plugin.name).toBe('multiTabSync');
+      expect(plugin.name).toBe('sync');
     });
   });
 
@@ -561,7 +561,7 @@ describe('multiTabSync Plugin', () => {
         const reactor = createReactor(
           { count: 0 },
           {
-            plugins: [multiTabSync({ key: 'ssr-test' })],
+            plugins: [sync({ key: 'ssr-test' })],
           }
         );
 
@@ -583,14 +583,14 @@ describe('multiTabSync Plugin', () => {
       const tab1 = createReactor(
         { count: 0 },
         {
-          plugins: [multiTabSync({ key: 'actions', debounce: 0 })],
+          plugins: [sync({ key: 'actions', debounce: 0 })],
         }
       );
 
       const tab2 = createReactor(
         { count: 0 },
         {
-          plugins: [multiTabSync({ key: 'actions', debounce: 0 })],
+          plugins: [sync({ key: 'actions', debounce: 0 })],
           onChange: (state, prevState, action) => {
             receivedAction = action;
           },
@@ -615,5 +615,70 @@ describe('multiTabSync Plugin', () => {
       tab1.destroy();
       tab2.destroy();
     });
+  });
+});
+
+describe('multiTabSync (deprecated alias)', () => {
+  beforeEach(() => {
+    (global as any).BroadcastChannel = MockBroadcastChannel;
+    MockBroadcastChannel.reset();
+    (global as any).window = {
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+    };
+  });
+
+  afterEach(() => {
+    MockBroadcastChannel.reset();
+    delete (global as any).BroadcastChannel;
+    delete (global as any).window;
+  });
+
+  it('should work as an alias for sync()', () => {
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+    const plugin = multiTabSync({ key: 'test' });
+
+    expect(plugin).toBeDefined();
+    expect(plugin.name).toBe('sync'); // Now uses 'sync' name
+    expect(plugin.init).toBeDefined();
+    expect(plugin.destroy).toBeDefined();
+
+    // Should have shown deprecation warning
+    expect(warnSpy).toHaveBeenCalledWith(
+      expect.stringContaining('multiTabSync() is deprecated')
+    );
+
+    warnSpy.mockRestore();
+  });
+
+  it('should still sync state correctly', async () => {
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+    const tab1 = createReactor(
+      { count: 0 },
+      {
+        plugins: [multiTabSync({ key: 'legacy', debounce: 0 })],
+      }
+    );
+
+    const tab2 = createReactor(
+      { count: 0 },
+      {
+        plugins: [multiTabSync({ key: 'legacy', debounce: 0 })],
+      }
+    );
+
+    tab1.update((s) => {
+      s.count = 42;
+    });
+
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    expect(tab2.state.count).toBe(42);
+
+    tab1.destroy();
+    tab2.destroy();
+    warnSpy.mockRestore();
   });
 });

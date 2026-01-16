@@ -7,6 +7,9 @@
 
 import type { ReactorPlugin, PluginContext, Middleware, SyncOptions } from '../types/index.js';
 
+// Track deprecation warning for multiTabSync alias
+let _multiTabSyncDeprecationWarned = false;
+
 /**
  * Enable multi-tab state synchronization
  *
@@ -15,19 +18,19 @@ import type { ReactorPlugin, PluginContext, Middleware, SyncOptions } from '../t
  *
  * @example
  * ```ts
- * import { createReactor } from 'svelte-reactor';
- * import { multiTabSync, persist } from 'svelte-reactor/plugins';
+ * import { createReactor } from '@svelte-reactor/core';
+ * import { sync, persist } from '@svelte-reactor/core/plugins';
  *
  * const reactor = createReactor({ count: 0 }, {
  *   name: 'counter',
  *   plugins: [
  *     persist({ key: 'counter' }),
- *     multiTabSync({ key: 'counter' })
+ *     sync({ key: 'counter' })
  *   ],
  * });
  * ```
  */
-export function multiTabSync<T extends object>(options: SyncOptions = {}): ReactorPlugin<T> {
+export function sync<T extends object>(options: SyncOptions = {}): ReactorPlugin<T> {
   const {
     key,
     broadcast = true,
@@ -36,7 +39,7 @@ export function multiTabSync<T extends object>(options: SyncOptions = {}): React
 
   // Validate debounce
   if (typeof debounce !== 'number' || debounce < 0) {
-    throw new TypeError(`[multiTabSync] options.debounce must be a non-negative number, got ${debounce}`);
+    throw new TypeError(`[sync] options.debounce must be a non-negative number, got ${debounce}`);
   }
 
   let channel: BroadcastChannel | null = null;
@@ -45,7 +48,7 @@ export function multiTabSync<T extends object>(options: SyncOptions = {}): React
   let isReceivingUpdate = false;
 
   return {
-    name: 'multiTabSync',
+    name: 'sync',
 
     init(ctx: PluginContext<T>): void {
       context = ctx;
@@ -61,7 +64,7 @@ export function multiTabSync<T extends object>(options: SyncOptions = {}): React
       // Check for BroadcastChannel support
       if (typeof BroadcastChannel === 'undefined') {
         console.warn(
-          `[multiTabSync] BroadcastChannel API is not available in this browser.\n` +
+          `[sync] BroadcastChannel API is not available in this browser.\n` +
           `Multi-tab sync will be disabled. Most modern browsers support this API (95%+).`
         );
         return;
@@ -99,7 +102,7 @@ export function multiTabSync<T extends object>(options: SyncOptions = {}): React
 
         // Register middleware to broadcast state changes
         const middleware: Middleware<T> = {
-          name: 'multiTabSync-broadcaster',
+          name: 'sync-broadcaster',
 
           onAfterUpdate(prevState: T, nextState: T, action?: string): void {
             // Don't broadcast if we're receiving an update from another tab
@@ -124,7 +127,7 @@ export function multiTabSync<T extends object>(options: SyncOptions = {}): React
               try {
                 channel?.postMessage(message);
               } catch (error) {
-                console.error(`[multiTabSync:${syncKey}] Failed to broadcast message:`, error);
+                console.error(`[sync:${syncKey}] Failed to broadcast message:`, error);
               }
             }, debounce);
           },
@@ -132,7 +135,7 @@ export function multiTabSync<T extends object>(options: SyncOptions = {}): React
 
         ctx.middlewares.push(middleware);
       } catch (error) {
-        console.error(`[multiTabSync:${syncKey}] Failed to create BroadcastChannel:`, error);
+        console.error(`[sync:${syncKey}] Failed to create BroadcastChannel:`, error);
       }
     },
 
@@ -152,4 +155,21 @@ export function multiTabSync<T extends object>(options: SyncOptions = {}): React
       context = null;
     },
   };
+}
+
+/**
+ * @deprecated Use sync() instead. Will be removed in v0.4.0.
+ * @see https://github.com/svelte-reactor/core/blob/master/UPGRADES/UPGRADE-0.3.0.md
+ */
+export function multiTabSync<T extends object>(options: SyncOptions = {}): ReactorPlugin<T> {
+  // Show deprecation warning (once per session)
+  if (typeof console !== 'undefined' && !_multiTabSyncDeprecationWarned) {
+    _multiTabSyncDeprecationWarned = true;
+    console.warn(
+      '[svelte-reactor] multiTabSync() is deprecated. Use sync() instead.\n' +
+      'See: https://github.com/svelte-reactor/core/blob/master/UPGRADES/UPGRADE-0.3.0.md'
+    );
+  }
+
+  return sync<T>(options);
 }

@@ -1,11 +1,16 @@
-# Svelte Reactor v0.2.9 - Copilot Reference
+# Svelte Reactor v0.3.0 - Copilot Reference
 
 Docs: [README](./README.md) | [API](./API.md) | [EXAMPLES](./EXAMPLES.md)
 
 ## Imports
 ```typescript
-import { createReactor, simpleStore, persistedStore, computedStore, arrayActions, arrayPagination, asyncActions, derived, get, readonly, isEqual } from 'svelte-reactor';
-import { undoRedo, persist, logger, sync } from 'svelte-reactor/plugins';
+// NEW: @svelte-reactor/core (recommended)
+import { createReactor, simpleStore, persistedStore, computedStore, arrayActions, arrayPagination, derived, get, readonly, isEqual } from '@svelte-reactor/core';
+import { undoRedo, persist, logger, sync } from '@svelte-reactor/core/plugins';
+import { createForm } from '@svelte-reactor/core/helpers';
+
+// OLD: svelte-reactor (still works)
+import { createReactor } from 'svelte-reactor';
 ```
 
 ## createReactor
@@ -65,7 +70,28 @@ const { items, page, totalPages, hasNext } = pagination.getPage();
 pagination.nextPage(); pagination.prevPage(); pagination.setPage(3);
 ```
 
-## asyncActions
+## createForm (NEW v0.3.0)
+```typescript
+import { createForm } from '@svelte-reactor/core/helpers';
+
+const form = createForm({
+  initialValues: { email: '', password: '' },
+  validate: { email: v => v.includes('@') || 'Invalid', password: v => v.length >= 8 || 'Min 8' },
+  validateAsync: { email: async v => !(await checkExists(v)) || 'Taken' },
+  onSubmit: async (values) => await api.login(values),
+  validateOn: 'blur',  // 'change' | 'blur' | 'submit'
+  persistDraft: 'login'  // Auto-save to localStorage
+});
+
+// State: form.values, form.errors, form.touched, form.isValid, form.isSubmitting
+// Methods: form.setField('email', 'x'), form.setTouched('email'), form.validate(), form.submit(), form.reset()
+
+// useField action (cleaner syntax):
+<input type="email" use:form.useField={'email'} />
+<input type="checkbox" use:form.useField={'rememberMe'} />
+```
+
+## asyncActions (DEPRECATED)
 ```typescript
 const api = asyncActions(store, {
   fetch: async (id: string) => { const r = await fetch(`/api/${id}`); return { data: await r.json() }; }
@@ -79,7 +105,7 @@ api.fetch.cancel();
 undoRedo({ limit: 50 })
 persist({ key: 'app', storage: 'localStorage', omit: ['token'], ttl: 300000, onExpire: () => {}, onReady: (state) => {} })
 sync({ key: 'app', debounce: 100 })  // Multi-tab sync
-logger({ filter: a => a?.startsWith('user:'), trackPerformance: true })
+logger({ filter: a => a?.startsWith('user:'), performance: true })  // trackPerformance renamed to performance
 ```
 
 ## Selective Subscribe
@@ -90,7 +116,7 @@ store.select(s => s.user.name, (name, prev) => {}, { fireImmediately: false, equ
 ## Svelte Component
 ```svelte
 <script lang="ts">
-import { createReactor } from 'svelte-reactor';
+import { createReactor } from '@svelte-reactor/core';
 import { onDestroy } from 'svelte';
 const store = createReactor({ count: 0 });
 onDestroy(() => store.destroy());
@@ -100,8 +126,22 @@ onDestroy(() => store.destroy());
 </button>
 ```
 
+## Svelte Form Component
+```svelte
+<script lang="ts">
+import { createForm } from '@svelte-reactor/core/helpers';
+const form = createForm({ initialValues: { email: '' }, validate: { email: v => v.includes('@') || 'Invalid' } });
+</script>
+<form onsubmit={(e) => { e.preventDefault(); form.submit(); }}>
+  <input bind:value={form.values.email} onblur={() => form.setTouched('email')} />
+  {#if form.touched.email && form.errors.email}<span>{form.errors.email}</span>{/if}
+  <button disabled={!form.isValid}>Submit</button>
+</form>
+```
+
 ## Rules
-- Always call `store.destroy()` in `onDestroy`
+- Always call `store.destroy()` or `form.destroy()` in `onDestroy`
 - Use `store.update(fn)` not direct mutation
 - Use `omit` for sensitive data in persist
 - Use `select()` for specific field subscriptions
+- NEW: Use `@svelte-reactor/core` for new projects

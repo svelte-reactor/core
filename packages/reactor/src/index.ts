@@ -1,50 +1,20 @@
 /**
- * svelte-reactor
- * Powerful reactive state management for Svelte 5
+ * svelte-reactor - Compatibility wrapper for @svelte-reactor/core
+ *
+ * @deprecated This package is a compatibility wrapper. Please migrate to @svelte-reactor/core.
+ * @see https://github.com/svelte-reactor/core/blob/master/UPGRADES/UPGRADE-0.3.0.md
  */
 
-// Core
-export { createReactor } from './core/reactor.svelte.js';
-export { ReactorError, type ReactorErrorContext } from './core/reactor-error.js';
+// Show deprecation notice (once per session)
+let hasShownNotice = false;
 
-// Helpers (convenient wrappers)
-export { simpleStore, persistedStore, persistedReactor, arrayActions, arrayPagination, asyncActions, computedStore } from './helpers/index.js';
+if (typeof console !== 'undefined' && !hasShownNotice) {
+  hasShownNotice = true;
+  console.info(
+    '[svelte-reactor] Consider migrating to @svelte-reactor/core for new projects.\n' +
+    'See: https://github.com/svelte-reactor/core/blob/master/UPGRADES/UPGRADE-0.3.0.md'
+  );
+}
 
-// Types
-export type {
-  Reactor,
-  ReactorOptions,
-  ReactorPlugin,
-  PluginContext,
-  Middleware,
-  HistoryEntry,
-  HistoryStack,
-  UndoRedoHistory,
-  ReactorInspection,
-  UndoRedoOptions,
-  PersistOptions,
-  StorageType,
-  LoggerOptions,
-  SyncOptions,
-  ReactorDevTools,
-  Subscriber,
-  Unsubscriber,
-  SelectiveSubscribeOptions,
-} from './types/index.js';
-
-// Helper types
-export type { WritableStore, PersistedStoreOptions, ArrayActions, ArrayActionsOptions, ArrayPagination, ArrayPaginationOptions, PaginatedResult, AsyncActions, AsyncActionOptions, AsyncState, ComputedStoreOptions } from './helpers/index.js';
-
-// DevTools
-export { createDevTools } from './devtools/index.js';
-
-// Batch utilities
-export { batched, debouncedBatch } from './utils/batch.js';
-
-// Svelte store utilities
-// Re-export from svelte/store for convenience - all svelte-reactor stores are compatible
-export { derived, get, readonly } from 'svelte/store';
-export type { Readable } from 'svelte/store';
-
-// Utility functions
-export { isEqual } from './utils/clone.js';
+// Re-export everything from @svelte-reactor/core
+export * from '@svelte-reactor/core';

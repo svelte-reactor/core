@@ -2,25 +2,25 @@
 
 > **Production-ready** reactive state management for Svelte 5 with full **Svelte stores API** compatibility
 
-[![npm version](https://img.shields.io/npm/v/svelte-reactor.svg?style=flat)](https://www.npmjs.com/package/svelte-reactor)
-[![npm downloads](https://img.shields.io/npm/dm/svelte-reactor.svg?style=flat)](https://www.npmjs.com/package/svelte-reactor)
-[![Bundle size](https://img.shields.io/bundlephobia/minzip/svelte-reactor?style=flat&label=gzip)](https://bundlephobia.com/package/svelte-reactor)
+[![npm version](https://img.shields.io/npm/v/@svelte-reactor/core.svg?style=flat)](https://www.npmjs.com/package/@svelte-reactor/core)
+[![npm downloads](https://img.shields.io/npm/dm/@svelte-reactor/core.svg?style=flat)](https://www.npmjs.com/package/@svelte-reactor/core)
+[![Bundle size](https://img.shields.io/bundlephobia/minzip/@svelte-reactor/core?style=flat&label=gzip)](https://bundlephobia.com/package/@svelte-reactor/core)
+[![tests](https://img.shields.io/badge/tests-605%20passed-brightgreen?style=flat)](https://github.com/svelte-reactor/core)
 [![Build Status](https://github.com/svelte-reactor/core/workflows/CI/badge.svg)](https://github.com/svelte-reactor/core/actions)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue?style=flat&logo=typescript)](https://www.typescriptlang.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=flat)](https://opensource.org/licenses/MIT)
 
 **The most powerful state management for Svelte 5** - Combines the simplicity of Svelte stores with advanced features like undo/redo, persistence, and time-travel debugging.
 
-## ✨ What's New in v0.2.9
+## ✨ What's New in v0.3.0
 
 | Feature | Description |
 |---------|-------------|
-| 🧹 **Simplified API** | Removed deprecated `.value`, `batch()`, `batchAll()`, `diff()` |
-| 🚀 **Simpler AsyncActions** | Removed built-in retry/debounce - use at API layer |
-| 📄 **New `arrayPagination()`** | Standalone pagination helper (separated from arrayActions) |
-| ⚡ **Cleaner Subscriptions** | Use `select()` instead of `subscribe({ selector })` |
-| 📦 **Smaller Bundle** | 11.11 KB gzipped (down from 11.67 KB) |
-| ✅ **500 Tests** | Comprehensive test coverage |
+| 📦 **New Package Name** | `@svelte-reactor/core` (old `svelte-reactor` still works) |
+| 📝 **`createForm()` Helper** | Reactive forms with validation, async validators, draft persistence |
+| 🔄 **Renamed `multiTabSync`** | Now called `sync()` (old name deprecated) |
+| ⚠️ **Deprecated `asyncActions`** | Use plain async functions or wait for `createQuery()` in v0.4.0 |
+| ✅ **596 Tests** | +94 new form tests including stress tests |
 
 <details>
 <summary>📜 Previous Versions</summary>
@@ -33,7 +33,9 @@
 
 </details>
 
-📖 **Docs:** [Quick Start](./packages/reactor/QUICK_START.md) | [API Reference](./packages/reactor/API.md) | [Examples](./packages/reactor/EXAMPLES.md) | [Performance](./packages/reactor/PERFORMANCE.md)
+⚠️ **Upgrading to v0.3.0?** See the [Migration Guide](./MIGRATION.md#upgrading-to-v030) for breaking changes and new import paths.
+
+📖 **Docs:** [Quick Start](./QUICK_START.md) | [API Reference](./API.md) | [Forms](./FORMS.md) | [Plugins](./PLUGINS.md) | [Migration](./MIGRATION.md)
 
 ## 🚀 Features
 
@@ -46,8 +48,8 @@
 | **Sync** | Multi-Tab Sync, Cross-Tab BroadcastChannel |
 | **Async** | Auto Loading/Error States, Request Cancellation, Concurrency Control |
 | **Security** | Exclude Sensitive Data (`omit`/`pick`), TTL Auto-Expiration |
-| **DX** | AI Assistant Integration, DevTools, Rich Error Messages, 500 Tests |
-| **Performance** | 11 KB gzipped, Tree-Shakeable, SSR-Ready, TypeScript, Zero Dependencies |
+| **DX** | AI Assistant Integration, DevTools, Rich Error Messages, 596 Tests |
+| **Performance** | ~11.5 KB gzipped, Tree-Shakeable, SSR-Ready, TypeScript, Zero Dependencies |
 
 ## Installation
 
@@ -63,12 +65,45 @@ pnpm add svelte-reactor
 yarn add svelte-reactor
 ```
 
+## Bundle Size & Tree-Shaking
+
+The library is fully tree-shakeable. You only pay for what you use:
+
+| Import | GZIP Size |
+|--------|-----------|
+| Core only | ~1.1 KB |
+| + Helpers (`simpleStore`, `createForm`) | ~2.7 KB |
+| + Plugins (`undoRedo`, `persist`, `sync`) | ~5.3 KB |
+| + DevTools | ~6.2 KB |
+| **Everything** | **~11.5 KB** |
+
+**Typical usage example:**
+
+```typescript
+// ~5 KB gzipped - most common setup
+import { createReactor, simpleStore } from '@svelte-reactor/core';
+import { undoRedo, persist } from '@svelte-reactor/core/plugins';
+import { createForm } from '@svelte-reactor/core/helpers';
+```
+
+**Minimal usage:**
+
+```typescript
+// ~1.1 KB gzipped - just the core
+import { simpleStore } from '@svelte-reactor/core';
+```
+
 ## Upgrading
 
-📖 **[View All Upgrade Guides](./UPGRADES/)**
+📖 **[View All Upgrade Guides](../../UPGRADES/)**
 
-- [**v0.2.9**](./UPGRADES/UPGRADE-0.2.9.md) ⚠️ **Breaking Changes** - API cleanup & simplification
-- [v0.2.3](./UPGRADES/UPGRADE-0.2.3.md) - Feature enhancements (selective persistence, retry, bulk ops)
+- [**v0.3.1**](../../UPGRADES/UPGRADE-0.3.1.md) 🚧 **Planned** - IndexedDB performance, collection support
+- [**v0.3.0**](../../UPGRADES/UPGRADE-0.3.0.md) ⚠️ **Breaking Changes** - New package name, `createForm()`, `sync` plugin, deprecations
+- [**v0.2.9**](../../UPGRADES/UPGRADE-0.2.9.md) ⚠️ **Breaking Changes** - API cleanup & simplification
+- [v0.2.3](../../UPGRADES/UPGRADE-0.2.3.md) - Feature enhancements (selective persistence, retry, bulk ops)
+- [v0.2.2](../../UPGRADES/UPGRADE-0.2.2.md) - Bug fixes & stability improvements
+
+> **New package name:** Starting from v0.3.0, the recommended package is `@svelte-reactor/core`. The old `svelte-reactor` package is still available as a compatibility wrapper.
 
 ### 🤖 AI Assistant Setup (Optional)
 
@@ -197,7 +232,7 @@ export const editor = persistedReactor('editor', {
 
 Simple writable store compatible with Svelte's `$store` syntax.
 
-**→ [See full example in Quick Start](./packages/reactor/QUICK_START.md#simple-counter-store)**
+**→ [See full example in Quick Start](./QUICK_START.md#simple-counter-store)**
 
 ```typescript
 import { simpleStore } from 'svelte-reactor';
@@ -226,7 +261,7 @@ console.log(counter.get()); // 5
 
 Create a store that automatically persists to localStorage, sessionStorage, or IndexedDB.
 
-**→ [See full example in Quick Start](./packages/reactor/QUICK_START.md#persisted-store-auto-save-to-localstorage)**
+**→ [See full example in Quick Start](./QUICK_START.md#persisted-store-auto-save-to-localstorage)**
 
 ```typescript
 import { persistedStore } from 'svelte-reactor';
@@ -246,7 +281,7 @@ const settings = persistedStore('app-settings', { theme: 'dark' }, {
 
 Full reactor API with automatic persistence and plugin support.
 
-**→ [See full example in Quick Start](./packages/reactor/QUICK_START.md#full-reactor-with-undoredo)**
+**→ [See full example in Quick Start](./QUICK_START.md#full-reactor-with-undoredo)**
 
 ```typescript
 import { persistedReactor } from 'svelte-reactor';
@@ -265,7 +300,7 @@ store.undo(); // Undo last change
 
 Simplify array management with built-in CRUD operations.
 
-**→ [See Migration Guide](./packages/reactor/MIGRATION.md#working-with-arrays)**
+**→ [See Migration Guide](./MIGRATION.md#working-with-arrays)**
 
 ```typescript
 import { createReactor, arrayActions } from 'svelte-reactor';
@@ -314,11 +349,88 @@ pagination.firstPage();  // Jump to first page
 pagination.lastPage();   // Jump to last page
 ```
 
-#### `asyncActions(reactor, actions, options?)`
+#### `createForm(options)` - NEW in v0.3.0
+
+Reactive form management with validation and persistence:
+
+```typescript
+import { createForm } from '@svelte-reactor/core/helpers';
+
+const form = createForm({
+  initialValues: {
+    email: '',
+    password: '',
+    rememberMe: false
+  },
+
+  // Sync validation rules
+  validate: {
+    email: [
+      (v) => !!v || 'Email is required',
+      (v) => v.includes('@') || 'Invalid email'
+    ],
+    password: (v) => v.length >= 8 || 'Min 8 characters'
+  },
+
+  // Async validation (runs after sync passes)
+  validateAsync: {
+    email: async (v) => {
+      const exists = await checkEmailExists(v);
+      return !exists || 'Email already registered';
+    }
+  },
+
+  // Submit handler
+  onSubmit: async (values) => await api.login(values),
+
+  // When to validate: 'change' | 'blur' | 'submit'
+  validateOn: 'blur',
+
+  // Auto-save drafts to localStorage
+  persistDraft: 'login-form'
+});
+
+// Form state (reactive)
+form.values        // { email, password, rememberMe }
+form.errors        // { email: '', password: '' }
+form.touched       // { email: false, password: false }
+form.isValid       // true/false
+form.isSubmitting  // true during submit
+
+// Methods
+form.setField('email', 'user@example.com');
+form.setTouched('email');
+await form.validate();
+await form.submit();
+form.reset();
+```
+
+**Svelte usage:**
+
+```svelte
+<form onsubmit={(e) => { e.preventDefault(); form.submit(); }}>
+  <input
+    type="email"
+    bind:value={form.values.email}
+    onblur={() => form.setTouched('email')}
+  />
+  {#if form.touched.email && form.errors.email}
+    <span class="error">{form.errors.email}</span>
+  {/if}
+
+  <button disabled={!form.isValid || form.isSubmitting}>
+    {form.isSubmitting ? 'Loading...' : 'Submit'}
+  </button>
+</form>
+```
+
+#### `asyncActions(reactor, actions, options?)` - DEPRECATED
+
+> **Note:** `asyncActions` is deprecated in v0.3.0. Use plain async functions or wait for `createQuery()` in v0.4.0.
 
 Manage async operations with automatic loading and error states.
 
-**→ [See Migration Guide](./packages/reactor/MIGRATION.md#async-operations--loading-states)**
+**→ [See Migration Guide](./MIGRATION.md#async-operations--loading-states)**
 
 ```typescript
 import { createReactor, asyncActions } from 'svelte-reactor';
@@ -527,7 +639,7 @@ form.select(
 // Changes to 'name' don't trigger email or password validation! 🎯
 ```
 
-**See [EXAMPLES.md](./packages/reactor/EXAMPLES.md#selective-subscriptions) for more patterns**
+**See [EXAMPLES.md](./EXAMPLES.md#selective-subscriptions) for more patterns**
 
 ---
 
@@ -551,7 +663,7 @@ const filtered = computedStore(store, state => {
 }, { keys: ['items', 'filter'], equals: isEqual });
 ```
 
-📖 **See [EXAMPLES.md](./packages/reactor/EXAMPLES.md#computed-stores) for more patterns**
+📖 **See [EXAMPLES.md](./EXAMPLES.md#computed-stores) for more patterns**
 
 ---
 
@@ -580,7 +692,7 @@ const cache = persistedStore('api-cache', { data: null }, {
 });
 ```
 
-📖 **See [API.md](./packages/reactor/API.md#persist) for full storage options documentation.**
+📖 **See [API.md](./API.md#persist) for full storage options documentation.**
 
 ---
 
@@ -807,7 +919,7 @@ Reactor is highly optimized for performance:
 - **100 sequential updates**: 331 ops/sec (~3ms)
 - **Bundle size**: 14.68 KB gzipped (full package, v0.2.4)
 
-See [PERFORMANCE.md](./packages/reactor/PERFORMANCE.md) for detailed benchmarks.
+See [PERFORMANCE.md](./PERFORMANCE.md) for detailed benchmarks.
 
 ## Examples
 
@@ -893,13 +1005,13 @@ See [PERFORMANCE.md](./packages/reactor/PERFORMANCE.md) for detailed benchmarks.
 
 ## API Documentation
 
-For complete API reference, see [API.md](./packages/reactor/API.md).
+For complete API reference, see [API.md](./API.md).
 
-For more examples, see [EXAMPLES.md](./packages/reactor/EXAMPLES.md).
+For more examples, see [EXAMPLES.md](./EXAMPLES.md).
 
 ## Roadmap
 
-**Current:** v0.2.9 (500 tests, 11.11 KB gzipped) — See [CHANGELOG.md](./packages/reactor/CHANGELOG.md) for version history.
+**Current:** v0.2.9 (500 tests, 11.11 KB gzipped) — See [CHANGELOG.md](./CHANGELOG.md) for version history.
 
 ### 🔜 v0.3.0 - Advanced Features (Planned)
 - Enhanced Computed/Derived State API
@@ -952,7 +1064,7 @@ Contributions are welcome! Please read our [Contributing Guide](https://github.c
 
 ## License
 
-MIT License - see [LICENSE](./packages/reactor/LICENSE) for details
+MIT License - see [LICENSE](./LICENSE) for details
 
 ## Credits
 

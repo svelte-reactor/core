@@ -1,6 +1,10 @@
 /**
  * Async Actions Helper - Handle async operations with automatic loading/error states
  *
+ * @deprecated Use createQuery() (coming in v0.4.0) or plain async functions instead.
+ * Will be removed in v0.4.0.
+ * @see https://github.com/svelte-reactor/core/blob/master/UPGRADES/UPGRADE-0.3.0.md
+ *
  * v0.2.9: Simplified API
  * - Removed retry logic (use at API layer with withRetry wrapper)
  * - Removed debounce (use external debounce like lodash/debounce)
@@ -8,6 +12,9 @@
  */
 
 import type { Reactor } from '../types/index.js';
+
+// Track deprecation warning (show once per session)
+let _asyncActionsDeprecationWarned = false;
 
 export interface AsyncState {
   loading: boolean;
@@ -128,6 +135,16 @@ export function asyncActions<
   actions: T,
   options: AsyncActionOptions = {}
 ): AsyncActions<T> {
+  // Show deprecation warning (once per session)
+  if (typeof console !== 'undefined' && !_asyncActionsDeprecationWarned) {
+    _asyncActionsDeprecationWarned = true;
+    console.warn(
+      '[svelte-reactor] asyncActions() is deprecated.\n' +
+      'Use createQuery() (coming in v0.4.0) or plain async functions instead.\n' +
+      'See: https://github.com/svelte-reactor/core/blob/master/UPGRADES/UPGRADE-0.3.0.md'
+    );
+  }
+
   const {
     loadingKey = 'loading',
     errorKey = 'error',

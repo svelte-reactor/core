@@ -2,23 +2,15 @@
   "compilerOptions": {
     "target": "ES2022",
     "module": "ESNext",
-    "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "moduleResolution": "bundler",
-    "resolveJsonModule": true,
-    "allowJs": true,
-    "checkJs": true,
+    "declaration": true,
+    "declarationDir": "./dist",
+    "outDir": "./dist",
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true,
-    "declaration": true,
-    "declarationMap": true,
-    "outDir": "./dist",
-    "rootDir": "./src",
-    "sourceMap": true,
-    "composite": true,
-    "types": ["vitest/globals"]
+    "forceConsistentCasingInFileNames": true
   },
   "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist", "**/*.test.ts"]
+  "exclude": ["node_modules", "dist"]
 }
