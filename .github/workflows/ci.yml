@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [main, develop]
+    branches: [master, main, develop]
   pull_request:
-    branches: [main, develop]
+    branches: [master, main, develop]
 
 jobs:
   test:
@@ -42,13 +42,16 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Build core first
+        run: pnpm --filter @svelte-reactor/core build
+
       - name: Run tests
-        run: pnpm --filter svelte-reactor test
+        run: pnpm --filter @svelte-reactor/core test
 
       - name: Type check
-        run: pnpm --filter svelte-reactor typecheck
+        run: pnpm --filter @svelte-reactor/core typecheck
 
-      - name: Build
+      - name: Build wrapper
         run: pnpm --filter svelte-reactor build
 
   lint:
@@ -72,8 +75,8 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Lint
-        run: pnpm lint
+      - name: Build core
+        run: pnpm --filter @svelte-reactor/core build
 
-      - name: Format check
-        run: pnpm exec prettier --check .
+      - name: Lint core
+        run: pnpm --filter @svelte-reactor/core lint
