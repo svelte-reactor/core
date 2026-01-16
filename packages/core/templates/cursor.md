@@ -28,7 +28,7 @@ import { undoRedo, persist, logger, sync } from '@svelte-reactor/core/plugins';
 import { createForm } from '@svelte-reactor/core/helpers';
 
 // OLD: svelte-reactor (still works)
-import { createReactor } from 'svelte-reactor';
+import { createReactor } from '@svelte-reactor/core';
 ```
 
 ## Core API
@@ -224,8 +224,8 @@ store.select(
 
 ```svelte
 <script lang="ts">
-import { createReactor } from 'svelte-reactor';
-import { undoRedo } from 'svelte-reactor/plugins';
+import { createReactor } from '@svelte-reactor/core';
+import { undoRedo } from '@svelte-reactor/core/plugins';
 import { onDestroy } from 'svelte';
 
 const store = createReactor({ count: 0 }, {

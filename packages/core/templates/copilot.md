@@ -10,7 +10,7 @@ import { undoRedo, persist, logger, sync } from '@svelte-reactor/core/plugins';
 import { createForm } from '@svelte-reactor/core/helpers';
 
 // OLD: svelte-reactor (still works)
-import { createReactor } from 'svelte-reactor';
+import { createReactor } from '@svelte-reactor/core';
 ```
 
 ## createReactor
