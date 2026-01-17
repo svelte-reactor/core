@@ -108,11 +108,11 @@ import { simpleStore } from '@svelte-reactor/core';
 
 📖 **[View All Upgrade Guides](../../UPGRADES/)**
 
-- [**v0.3.2**](../../UPGRADES/UPGRADE-0.3.2.md) 🚧 **Planned** - IndexedDB performance, collection support
+- [**v0.3.3**](../../UPGRADES/UPGRADE-0.3.3.md) 🚧 **Planned** - IndexedDB performance, collections, queries
+- [**v0.3.2**](../../UPGRADES/UPGRADE-0.3.2.md) 🚧 **Planned** - Bundle slimming, @svelte-reactor/forms
 - [**v0.3.1**](../../UPGRADES/UPGRADE-0.3.1.md) ✅ **Current** - Bundle size fix (Svelte externals)
-- [**v0.3.0**](../../UPGRADES/UPGRADE-0.3.0.md) ⚠️ **Breaking Changes** - New package name, `createForm()`, `sync` plugin, deprecations
+- [**v0.3.0**](../../UPGRADES/UPGRADE-0.3.0.md) ⚠️ **Breaking Changes** - New package name, `createForm()`, `sync` plugin
 - [**v0.2.9**](../../UPGRADES/UPGRADE-0.2.9.md) ⚠️ **Breaking Changes** - API cleanup & simplification
-- [v0.2.3](../../UPGRADES/UPGRADE-0.2.3.md) - Feature enhancements (selective persistence, retry, bulk ops)
 
 > **New package name:** Starting from v0.3.0, the recommended package is `@svelte-reactor/core`. The old `svelte-reactor` package is still available as a compatibility wrapper.
 
@@ -1024,11 +1024,17 @@ For more examples, see [EXAMPLES.md](./EXAMPLES.md).
 
 **Current:** v0.3.1 (617 tests, ~16 KB gzipped) — See [CHANGELOG.md](./CHANGELOG.md) for version history.
 
-### 🔜 v0.3.2 - IndexedDB Performance & Collections (Planned)
+### 🔜 v0.3.2 - Bundle Slimming (Planned)
+- Extract `createForm` to `@svelte-reactor/forms` package
+- Reduce core bundle to ~10-12 KB gzip
+- Built-in validators (required, email, minLength, etc.)
+- Form examples (login, registration, wizard)
+
+### 🔜 v0.3.3 - IndexedDB Performance & Collections (Planned)
 - IndexedDB connection pooling and batch writes
 - Collection support for large arrays
 - Query support (preview)
-- Form examples (login, registration, wizard)
+- Test optimization
 
 ### 🚀 v1.0.0 - Stable Release (Future)
 - React/Vue adapters

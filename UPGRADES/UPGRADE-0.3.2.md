@@ -1,203 +1,126 @@
 # Upgrade Guide: v0.3.2
 
-**Target Release:** Q2 2026
-**Codename:** "IndexedDB Performance & Collections"
+**Target Release:** Q1 2026
+**Codename:** "Bundle Slimming"
 **Status:** Planning
 
 ---
 
 ## Overview
 
-v0.3.2 focuses on IndexedDB performance improvements and better collection support:
+v0.3.2 focuses on reducing bundle size by extracting forms into a separate package:
 
-1. **IndexedDB Performance** - Connection pooling, batch writes, faster operations
-2. **Collection Support** - Better API for storing arrays/collections in IndexedDB
-3. **Test Optimization** - Faster test suite execution
-4. **Demo Updates** - Update examples to use new `createForm()` API
+1. **Package Split** - Extract `createForm` to `@svelte-reactor/forms`
+2. **Bundle Optimization** - Reduce core to ~10-12 KB gzip
+3. **Form Examples** - Interactive form demos
+4. **Demo Updates** - Update examples to new package structure
+
+---
+
+## Why Split Forms?
+
+**Current state (v0.3.1):**
+```
+@svelte-reactor/core: ~16 KB gzip (everything included)
+```
+
+**Problem:**
+- Many users don't need forms
+- Forms add ~3-4 KB to bundle
+- Core functionality gets diluted
+
+**After v0.3.2:**
+```
+@svelte-reactor/core:  ~10-12 KB gzip (state management)
+@svelte-reactor/forms: ~4-5 KB gzip (forms, optional)
+```
 
 ---
 
 ## What's New
 
-### 1. IndexedDB Connection Pooling
-
-**Problem:** Each reactor opens a new IndexedDB connection, which is slow.
-
-**Solution:** Shared connection pool per database.
+### 1. New Package: `@svelte-reactor/forms`
 
 ```typescript
-// Before: Each reactor opens new connection
-const store1 = createReactor(state1, { plugins: [persist({ storage: 'indexedDB' })] });
-const store2 = createReactor(state2, { plugins: [persist({ storage: 'indexedDB' })] });
-// = 2 database connections
+// Before (v0.3.1)
+import { createForm } from '@svelte-reactor/core/helpers';
 
-// After: Connections are pooled
-const store1 = createReactor(state1, { plugins: [persist({ storage: 'indexedDB' })] });
-const store2 = createReactor(state2, { plugins: [persist({ storage: 'indexedDB' })] });
-// = 1 shared connection
+// After (v0.3.2) - NEW PACKAGE
+import { createForm } from '@svelte-reactor/forms';
+
+// Old import still works (re-export with deprecation warning)
+import { createForm } from '@svelte-reactor/core/helpers'; // Shows warning
 ```
 
-**API:** No changes needed - automatic optimization.
-
-### 2. Batch Writes
-
-**Problem:** Multiple rapid updates = multiple IndexedDB transactions.
-
-**Solution:** Automatic batching of writes within a time window.
-
-```typescript
-// Before: 10 updates = 10 transactions
-for (let i = 0; i < 10; i++) {
-  store.update(s => { s.count = i; });
-}
-
-// After: 10 updates = 1 batched transaction
-// Automatic batching with configurable window
-persist({
-  storage: 'indexedDB',
-  batchWrites: true,      // NEW: Enable batching (default: true)
-  batchWindow: 50         // NEW: Batch window in ms (default: 50)
-})
+**Package structure:**
+```
+@svelte-reactor/forms
+├── createForm()        - Main form helper
+├── useField            - Svelte action for inputs
+├── validators          - Common validators (email, minLength, etc.)
+└── types               - TypeScript definitions
 ```
 
-### 3. Collection Support
-
-**Problem:** Storing large arrays is inefficient - entire array rewritten on each change.
-
-**Solution:** New collection-aware persistence mode.
+### 2. Built-in Validators (NEW)
 
 ```typescript
-// Before: Entire todos array saved on every change
-const todos = createReactor({ items: [] }, {
-  plugins: [persist({ key: 'todos', storage: 'indexedDB' })]
-});
+import { createForm, validators } from '@svelte-reactor/forms';
 
-// After: Individual items stored separately
-const todos = createReactor({ items: [] }, {
-  plugins: [
-    persist({
-      key: 'todos',
-      storage: 'indexedDB',
-      collections: {
-        items: {
-          idKey: 'id',           // Field to use as key
-          saveIndividually: true // Store each item separately
-        }
-      }
-    })
-  ]
-});
-
-// Benefits:
-// - Only changed items are written
-// - Faster reads (can load subset)
-// - Better for large datasets (1000+ items)
-```
-
-**Collection Options:**
-
-```typescript
-interface CollectionConfig {
-  idKey: string;              // Primary key field (default: 'id')
-  saveIndividually?: boolean; // Store items separately (default: false)
-  indexFields?: string[];     // Fields to index for querying
-  maxItems?: number;          // Max items to keep (LRU eviction)
-}
-```
-
-### 4. Query Support (Preview)
-
-**New:** Basic querying for collections.
-
-```typescript
-const todos = createReactor({ items: [] }, {
-  plugins: [
-    persist({
-      key: 'todos',
-      storage: 'indexedDB',
-      collections: {
-        items: {
-          idKey: 'id',
-          indexFields: ['status', 'createdAt']
-        }
-      }
-    })
-  ]
-});
-
-// Query items (async)
-const completed = await todos.query('items', {
-  where: { status: 'completed' },
-  orderBy: 'createdAt',
-  limit: 10
+const form = createForm({
+  initialValues: { email: '', password: '', age: '' },
+  validate: {
+    email: [validators.required(), validators.email()],
+    password: [validators.required(), validators.minLength(8)],
+    age: [validators.required(), validators.number(), validators.min(18)]
+  }
 });
 ```
 
----
+**Available validators:**
+| Validator | Description |
+|-----------|-------------|
+| `required(msg?)` | Field must not be empty |
+| `email(msg?)` | Valid email format |
+| `minLength(n, msg?)` | Minimum string length |
+| `maxLength(n, msg?)` | Maximum string length |
+| `min(n, msg?)` | Minimum number value |
+| `max(n, msg?)` | Maximum number value |
+| `pattern(regex, msg?)` | Match regex pattern |
+| `number(msg?)` | Must be a valid number |
+| `url(msg?)` | Valid URL format |
+| `match(field, msg?)` | Must match another field |
 
-## Performance Improvements
+### 3. Bundle Size Reduction
 
-### Test Suite Optimization
-
-**Current:** IndexedDB tests take ~15-20 seconds
-
-**Target:** < 5 seconds
-
-| Optimization | Impact |
-|--------------|--------|
-| Reduce simulatePageReload wait: 300ms → 50ms | -10s |
-| Use vitest fake timers | -3s |
-| Parallel test execution | -2s |
-
-### Runtime Performance
-
-| Operation | Before | After | Improvement |
-|-----------|--------|-------|-------------|
-| Open database | ~50ms | ~5ms (pooled) | 10x |
-| Write 100 items | ~500ms | ~50ms (batched) | 10x |
-| Update 1 item in 1000 | ~100ms | ~5ms (individual) | 20x |
-| Load 1000 items | ~200ms | ~200ms | Same |
+| Package | v0.3.1 | v0.3.2 | Change |
+|---------|--------|--------|--------|
+| `@svelte-reactor/core` | ~16 KB | ~10-12 KB | **-25%** |
+| `@svelte-reactor/forms` | - | ~4-5 KB | New |
+| **Total (both)** | ~16 KB | ~15-17 KB | Same |
+| **Core only** | ~16 KB | ~10-12 KB | **-25%** |
 
 ---
 
 ## Implementation Plan
 
-### Phase 1: Connection Pooling
-- [ ] Create `IndexedDBPool` class
-- [ ] Singleton pool per database name
-- [ ] Reference counting for cleanup
-- [ ] Tests for concurrent access
-- [ ] Benchmark: verify 10x improvement
+### Phase 1: Package Setup
+- [ ] Create `packages/forms/` directory
+- [ ] Setup package.json for `@svelte-reactor/forms`
+- [ ] Move form.svelte.ts to new package
+- [ ] Setup build configuration
 
-### Phase 2: Batch Writes
-- [ ] Add `batchWrites` option to persist plugin
-- [ ] Implement write queue with configurable window
-- [ ] Flush on destroy/beforeunload
-- [ ] Tests for batch behavior
-- [ ] Benchmark: verify 10x improvement
+### Phase 2: Validators
+- [ ] Create `validators/` module
+- [ ] Implement common validators
+- [ ] Add custom validator support
+- [ ] Tests for all validators
 
-### Phase 3: Collection Support
-- [ ] Design collection storage schema
-- [ ] Implement `collections` option
-- [ ] Add `saveIndividually` mode
-- [ ] Implement delta updates (only changed items)
-- [ ] Tests for collection CRUD
-- [ ] Tests for large datasets (10,000+ items)
+### Phase 3: Migration Support
+- [ ] Re-export from `@svelte-reactor/core/helpers` with deprecation warning
+- [ ] Update documentation
+- [ ] Migration guide
 
-### Phase 4: Query Support (Preview)
-- [ ] Add `query()` method to reactor
-- [ ] Implement basic where/orderBy/limit
-- [ ] Index creation for indexed fields
-- [ ] Tests for query operations
-- [ ] Documentation
-
-### Phase 5: Test Optimization
-- [ ] Reduce wait times in IndexedDB tests
-- [ ] Add vitest fake timer support
-- [ ] Verify all 596+ tests still pass
-- [ ] Target: < 5s for IndexedDB tests
-
-### Phase 6: Form Examples (Deferred from v0.3.0)
+### Phase 4: Form Examples
 
 Interactive form examples in `examples/reactor-demos/`:
 
@@ -208,7 +131,7 @@ Interactive form examples in `examples/reactor-demos/`:
   - Submit handling
 
 - [ ] **Registration with Password Confirmation**
-  - Cross-field validation
+  - Cross-field validation (password match)
   - Password strength indicator
   - Async email availability check
   - Terms checkbox
@@ -224,37 +147,66 @@ Interactive form examples in `examples/reactor-demos/`:
   - Array field validation
   - Reordering support
 
-### Phase 7: Demo Updates
-- [ ] Update ContactForm.svelte to use `createForm()`
-- [ ] Update demo site to use `@svelte-reactor/core` imports
+### Phase 5: Demo Updates
+- [ ] Update ContactForm.svelte to use `@svelte-reactor/forms`
+- [ ] Update demo site imports
 - [ ] Update demo README
 
 ---
 
 ## Migration Guide
 
-### No Breaking Changes
+### Automatic (Recommended)
 
-v0.3.1 is fully backward compatible. All improvements are opt-in or automatic.
-
-### Enabling New Features
+Old imports continue to work with deprecation warning:
 
 ```typescript
-// Connection pooling: automatic, no changes needed
+// This still works in v0.3.2 (with console warning)
+import { createForm } from '@svelte-reactor/core/helpers';
+```
 
-// Batch writes: enabled by default in v0.3.1
-persist({
-  storage: 'indexedDB',
-  batchWrites: true  // default
-})
+### Manual Migration
 
-// Collection support: opt-in
-persist({
-  storage: 'indexedDB',
-  collections: {
-    items: { idKey: 'id', saveIndividually: true }
+```bash
+npm install @svelte-reactor/forms
+```
+
+```typescript
+// Before
+import { createForm } from '@svelte-reactor/core/helpers';
+
+// After
+import { createForm } from '@svelte-reactor/forms';
+```
+
+### Using New Validators
+
+```typescript
+// Before (custom validation functions)
+const form = createForm({
+  validate: {
+    email: (v) => !!v || 'Required',
+    password: (v) => v.length >= 8 || 'Min 8 chars'
   }
-})
+});
+
+// After (built-in validators)
+import { createForm, validators } from '@svelte-reactor/forms';
+
+const form = createForm({
+  validate: {
+    email: validators.required(),
+    password: validators.minLength(8)
+  }
+});
+
+// Mix both approaches
+const form = createForm({
+  validate: {
+    email: [validators.required(), validators.email()],
+    custom: (v) => v.startsWith('A') || 'Must start with A'
+  }
+});
 ```
 
 ---
@@ -263,58 +215,48 @@ persist({
 
 | Metric | Target |
 |--------|--------|
-| IndexedDB test time | < 5s (from 15s) |
-| Connection open time | < 10ms (from 50ms) |
-| Batch write performance | 10x improvement |
-| Collection update performance | 20x improvement |
-| Bundle size increase | < 1 KB |
-| New tests | 30+ |
+| Core bundle size | < 12 KB gzip (from 16 KB) |
+| Forms package size | < 5 KB gzip |
+| Migration effort | < 5 min |
+| New validators | 10+ |
+| Form examples | 4 |
+| New tests | 50+ |
 
 ---
 
 ## Checklist
 
-### Phase 1: Connection Pooling
-- [ ] `IndexedDBPool` class
-- [ ] Reference counting
-- [ ] Concurrent access tests
-- [ ] Performance benchmark
+### Phase 1: Package Setup
+- [ ] Create packages/forms/
+- [ ] package.json
+- [ ] vite.config.ts
+- [ ] tsconfig.json
 
-### Phase 2: Batch Writes
-- [ ] `batchWrites` option
-- [ ] Write queue
-- [ ] Flush handling
-- [ ] Tests
+### Phase 2: Code Migration
+- [ ] Move form.svelte.ts
+- [ ] Create validators/
+- [ ] Update exports
+- [ ] Deprecation re-export
 
-### Phase 3: Collections
-- [ ] `collections` option
-- [ ] Individual item storage
-- [ ] Delta updates
-- [ ] Large dataset tests
-
-### Phase 4: Query (Preview)
-- [ ] `query()` method
-- [ ] Basic operators
-- [ ] Index support
-- [ ] Documentation
-
-### Phase 5: Tests
-- [ ] Optimize wait times
-- [ ] Fake timers
+### Phase 3: Testing
+- [ ] Move form tests
+- [ ] Add validator tests
+- [ ] Integration tests
 - [ ] All tests pass
 
-### Phase 6: Form Examples
-- [ ] Basic login form
+### Phase 4: Documentation
+- [ ] README for @svelte-reactor/forms
+- [ ] API documentation
+- [ ] Migration guide
+- [ ] Update main README
+
+### Phase 5: Examples
+- [ ] Login form
 - [ ] Registration form
 - [ ] Multi-step wizard
 - [ ] Dynamic fields
 
-### Phase 7: Demos
-- [ ] Update existing demos
-- [ ] Update imports to @svelte-reactor/core
-
 ---
 
-**Created:** 2025-01-10
-**Updated:** 2025-01-16
+**Created:** 2026-01-17
 **Status:** Planning
