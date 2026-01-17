@@ -12,7 +12,16 @@
 
 **The most powerful state management for Svelte 5** - Combines the simplicity of Svelte stores with advanced features like undo/redo, persistence, and time-travel debugging.
 
-## ✨ What's New in v0.3.0
+## ✨ What's New in v0.3.1
+
+| Feature | Description |
+|---------|-------------|
+| 📦 **Bundle Size Fix** | Fixed Svelte runtime duplication (~59% reduction in computed-store chunk) |
+| 📖 **Documentation** | Clarified `.get()` method for stores |
+| ✅ **617 Tests** | All tests passing |
+
+<details>
+<summary>📜 v0.3.0 Highlights</summary>
 
 | Feature | Description |
 |---------|-------------|
@@ -20,11 +29,13 @@
 | 📝 **`createForm()` Helper** | Reactive forms with validation, async validators, draft persistence |
 | 🔄 **Renamed `multiTabSync`** | Now called `sync()` (old name deprecated) |
 | ⚠️ **Deprecated `asyncActions`** | Use plain async functions or wait for `createQuery()` in v0.4.0 |
-| ✅ **617 Tests** | +94 new form tests including stress tests |
+
+</details>
 
 <details>
 <summary>📜 Previous Versions</summary>
 
+- **v0.3.0**: New package name, `createForm()`, `sync` plugin
 - **v0.2.8**: `.value` deprecation warning, complete docs
 - **v0.2.7**: `select()` method, `ReactorError` class, async concurrency control
 - **v0.2.5**: Selective subscriptions, computed stores, 25% smaller bundle
@@ -33,7 +44,7 @@
 
 </details>
 
-⚠️ **Upgrading to v0.3.0?** See the [Migration Guide](./MIGRATION.md#upgrading-to-v030) for breaking changes and new import paths.
+⚠️ **Upgrading from v0.2.x?** See the [Migration Guide](./MIGRATION.md#upgrading-to-v030) for breaking changes and new import paths.
 
 📖 **Docs:** [Quick Start](./QUICK_START.md) | [API Reference](./API.md) | [Forms](./FORMS.md) | [Plugins](./PLUGINS.md) | [Migration](./MIGRATION.md)
 
@@ -97,11 +108,11 @@ import { simpleStore } from '@svelte-reactor/core';
 
 📖 **[View All Upgrade Guides](../../UPGRADES/)**
 
-- [**v0.3.1**](../../UPGRADES/UPGRADE-0.3.1.md) 🚧 **Planned** - IndexedDB performance, collection support
+- [**v0.3.2**](../../UPGRADES/UPGRADE-0.3.2.md) 🚧 **Planned** - IndexedDB performance, collection support
+- [**v0.3.1**](../../UPGRADES/UPGRADE-0.3.1.md) ✅ **Current** - Bundle size fix (Svelte externals)
 - [**v0.3.0**](../../UPGRADES/UPGRADE-0.3.0.md) ⚠️ **Breaking Changes** - New package name, `createForm()`, `sync` plugin, deprecations
 - [**v0.2.9**](../../UPGRADES/UPGRADE-0.2.9.md) ⚠️ **Breaking Changes** - API cleanup & simplification
 - [v0.2.3](../../UPGRADES/UPGRADE-0.2.3.md) - Feature enhancements (selective persistence, retry, bulk ops)
-- [v0.2.2](../../UPGRADES/UPGRADE-0.2.2.md) - Bug fixes & stability improvements
 
 > **New package name:** Starting from v0.3.0, the recommended package is `@svelte-reactor/core`. The old `svelte-reactor` package is still available as a compatibility wrapper.
 
@@ -1011,9 +1022,9 @@ For more examples, see [EXAMPLES.md](./EXAMPLES.md).
 
 ## Roadmap
 
-**Current:** v0.3.0 (617 tests, ~11.5 KB gzipped) — See [CHANGELOG.md](./CHANGELOG.md) for version history.
+**Current:** v0.3.1 (617 tests, ~16 KB gzipped) — See [CHANGELOG.md](./CHANGELOG.md) for version history.
 
-### 🔜 v0.3.1 - IndexedDB Performance & Collections (Planned)
+### 🔜 v0.3.2 - IndexedDB Performance & Collections (Planned)
 - IndexedDB connection pooling and batch writes
 - Collection support for large arrays
 - Query support (preview)

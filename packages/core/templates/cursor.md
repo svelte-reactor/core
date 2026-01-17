@@ -2,7 +2,7 @@
 
 ## Quick Reference
 
-**Package:** `@svelte-reactor/core` v0.3.0
+**Package:** `@svelte-reactor/core` v0.3.1
 **Purpose:** Reactive state management for Svelte 5 with undo/redo, persistence, forms, plugins
 
 ## Documentation Links

@@ -1,4 +1,4 @@
-# Svelte Reactor v0.3.0 - Copilot Reference
+# Svelte Reactor v0.3.1 - Copilot Reference
 
 Docs: [README](./README.md) | [API](./API.md) | [EXAMPLES](./EXAMPLES.md)
 

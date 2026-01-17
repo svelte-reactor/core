@@ -7,6 +7,48 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.1] - 2026-01-17
+
+### Fixed
+
+- **CRITICAL: Bundle Size** - Fixed Svelte runtime duplication in build output
+  - `computed-store` chunk reduced from 38 KB to 15.71 KB (4.59 KB gzip) - **59% reduction**
+  - Added missing externals: `svelte/internal`, `svelte/internal/client`, `svelte/internal/server`
+  - Added regex pattern `/^svelte\//` to catch all Svelte subpath imports
+  - Consumers no longer bundle duplicate Svelte reactivity system
+
+### Changed
+
+- Updated `vite.config.ts` with complete Svelte externals configuration
+- 617 tests passing (same as v0.3.0)
+- Bundle now properly relies on host app's Svelte runtime
+
+### Technical Details
+
+**Before v0.3.1:**
+```
+computed-store-*.js   38 KB (11.5 KB gzip) ← Bundled Svelte internals
+```
+
+**After v0.3.1:**
+```
+computed-store-*.js   15.71 KB (4.59 KB gzip) ← Uses external Svelte
+```
+
+**Build Configuration Fix:**
+```typescript
+// vite.config.ts - rollupOptions.external
+external: [
+  'svelte',
+  'svelte/store',
+  'svelte/reactivity',
+  'svelte/internal',           // NEW
+  'svelte/internal/client',    // NEW
+  'svelte/internal/server',    // NEW
+  /^svelte\//,                 // NEW - catch all svelte/* imports
+]
+```
+
 ## [0.3.0] - 2025-01-10
 
 ### New Features

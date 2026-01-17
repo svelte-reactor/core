@@ -31,8 +31,12 @@ export default defineConfig({
     rollupOptions: {
       external: [
         'svelte',
-        'svelte/reactivity',
         'svelte/store',
+        'svelte/reactivity',
+        'svelte/internal',
+        'svelte/internal/client',
+        'svelte/internal/server',
+        /^svelte\//,  // All svelte/* imports as external
         // CLI deps (not used in browser bundles)
         'kleur',
         'prompts',

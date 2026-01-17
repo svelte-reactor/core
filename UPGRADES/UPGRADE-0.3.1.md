@@ -1,233 +1,59 @@
 # Upgrade Guide: v0.3.1
 
-**Target Release:** Q1 2025
-**Codename:** "IndexedDB Performance & Collections"
-**Status:** Planning
+**Release Date:** 2026-01-17
+**Codename:** "Bundle Optimization"
+**Status:** Released
 
 ---
 
 ## Overview
 
-v0.3.1 focuses on IndexedDB performance improvements and better collection support:
+v0.3.1 fixes a critical bundle size issue where Svelte runtime was being duplicated.
 
-1. **IndexedDB Performance** - Connection pooling, batch writes, faster operations
-2. **Collection Support** - Better API for storing arrays/collections in IndexedDB
-3. **Test Optimization** - Faster test suite execution
-4. **Demo Updates** - Update examples to use new `createForm()` API
+1. **Bundle Size Fix** - Stop bundling Svelte runtime (~59% reduction in computed-store chunk)
+2. **Documentation** - All docs updated with v0.3.1 version
 
 ---
 
-## What's New
+## What's Fixed
 
-### 1. IndexedDB Connection Pooling
+### Bundle Size Optimization (CRITICAL)
 
-**Problem:** Each reactor opens a new IndexedDB connection, which is slow.
+**Problem:** `@svelte-reactor/core@0.3.0` bundled Svelte 5 internals instead of using them as external dependency.
 
-**Solution:** Shared connection pool per database.
-
-```typescript
-// Before: Each reactor opens new connection
-const store1 = createReactor(state1, { plugins: [persist({ storage: 'indexedDB' })] });
-const store2 = createReactor(state2, { plugins: [persist({ storage: 'indexedDB' })] });
-// = 2 database connections
-
-// After: Connections are pooled
-const store1 = createReactor(state1, { plugins: [persist({ storage: 'indexedDB' })] });
-const store2 = createReactor(state2, { plugins: [persist({ storage: 'indexedDB' })] });
-// = 1 shared connection
+**Before (v0.3.0):**
+```
+node_modules/@svelte-reactor/core/dist/
+├── computed-store-*.js   38 KB (11.5 KB gzip) ← Bundled Svelte internals!
+├── persist-plugin-*.js   16 KB (5 KB gzip)
+├── lz-string-*.js         9 KB (lazy)
+└── index.js               2.5 KB
 ```
 
-**API:** No changes needed - automatic optimization.
-
-### 2. Batch Writes
-
-**Problem:** Multiple rapid updates = multiple IndexedDB transactions.
-
-**Solution:** Automatic batching of writes within a time window.
-
-```typescript
-// Before: 10 updates = 10 transactions
-for (let i = 0; i < 10; i++) {
-  store.update(s => { s.count = i; });
-}
-
-// After: 10 updates = 1 batched transaction
-// Automatic batching with configurable window
-persist({
-  storage: 'indexedDB',
-  batchWrites: true,      // NEW: Enable batching (default: true)
-  batchWindow: 50         // NEW: Batch window in ms (default: 50)
-})
+**After (v0.3.1):**
+```
+node_modules/@svelte-reactor/core/dist/
+├── computed-store-*.js   15.71 KB (4.59 KB gzip) ← 59% smaller!
+├── persist-plugin-*.js   15.99 KB (4.20 KB gzip)
+├── lz-string-*.js         9.04 KB (lazy)
+└── index.js               2.52 KB
 ```
 
-### 3. Collection Support
-
-**Problem:** Storing large arrays is inefficient - entire array rewritten on each change.
-
-**Solution:** New collection-aware persistence mode.
+**What was fixed in `vite.config.ts`:**
 
 ```typescript
-// Before: Entire todos array saved on every change
-const todos = createReactor({ items: [] }, {
-  plugins: [persist({ key: 'todos', storage: 'indexedDB' })]
-});
-
-// After: Individual items stored separately
-const todos = createReactor({ items: [] }, {
-  plugins: [
-    persist({
-      key: 'todos',
-      storage: 'indexedDB',
-      collections: {
-        items: {
-          idKey: 'id',           // Field to use as key
-          saveIndividually: true // Store each item separately
-        }
-      }
-    })
-  ]
-});
-
-// Benefits:
-// - Only changed items are written
-// - Faster reads (can load subset)
-// - Better for large datasets (1000+ items)
-```
-
-**Collection Options:**
-
-```typescript
-interface CollectionConfig {
-  idKey: string;              // Primary key field (default: 'id')
-  saveIndividually?: boolean; // Store items separately (default: false)
-  indexFields?: string[];     // Fields to index for querying
-  maxItems?: number;          // Max items to keep (LRU eviction)
+rollupOptions: {
+  external: [
+    'svelte',
+    'svelte/store',
+    'svelte/reactivity',
+    'svelte/internal',           // NEW
+    'svelte/internal/client',    // NEW
+    'svelte/internal/server',    // NEW
+    /^svelte\//,                 // NEW - catch all svelte/* imports
+  ],
 }
 ```
-
-### 4. Query Support (Preview)
-
-**New:** Basic querying for collections.
-
-```typescript
-const todos = createReactor({ items: [] }, {
-  plugins: [
-    persist({
-      key: 'todos',
-      storage: 'indexedDB',
-      collections: {
-        items: {
-          idKey: 'id',
-          indexFields: ['status', 'createdAt']
-        }
-      }
-    })
-  ]
-});
-
-// Query items (async)
-const completed = await todos.query('items', {
-  where: { status: 'completed' },
-  orderBy: 'createdAt',
-  limit: 10
-});
-```
-
----
-
-## Performance Improvements
-
-### Test Suite Optimization
-
-**Current:** IndexedDB tests take ~15-20 seconds
-
-**Target:** < 5 seconds
-
-| Optimization | Impact |
-|--------------|--------|
-| Reduce simulatePageReload wait: 300ms → 50ms | -10s |
-| Use vitest fake timers | -3s |
-| Parallel test execution | -2s |
-
-### Runtime Performance
-
-| Operation | Before | After | Improvement |
-|-----------|--------|-------|-------------|
-| Open database | ~50ms | ~5ms (pooled) | 10x |
-| Write 100 items | ~500ms | ~50ms (batched) | 10x |
-| Update 1 item in 1000 | ~100ms | ~5ms (individual) | 20x |
-| Load 1000 items | ~200ms | ~200ms | Same |
-
----
-
-## Implementation Plan
-
-### Phase 1: Connection Pooling
-- [ ] Create `IndexedDBPool` class
-- [ ] Singleton pool per database name
-- [ ] Reference counting for cleanup
-- [ ] Tests for concurrent access
-- [ ] Benchmark: verify 10x improvement
-
-### Phase 2: Batch Writes
-- [ ] Add `batchWrites` option to persist plugin
-- [ ] Implement write queue with configurable window
-- [ ] Flush on destroy/beforeunload
-- [ ] Tests for batch behavior
-- [ ] Benchmark: verify 10x improvement
-
-### Phase 3: Collection Support
-- [ ] Design collection storage schema
-- [ ] Implement `collections` option
-- [ ] Add `saveIndividually` mode
-- [ ] Implement delta updates (only changed items)
-- [ ] Tests for collection CRUD
-- [ ] Tests for large datasets (10,000+ items)
-
-### Phase 4: Query Support (Preview)
-- [ ] Add `query()` method to reactor
-- [ ] Implement basic where/orderBy/limit
-- [ ] Index creation for indexed fields
-- [ ] Tests for query operations
-- [ ] Documentation
-
-### Phase 5: Test Optimization
-- [ ] Reduce wait times in IndexedDB tests
-- [ ] Add vitest fake timer support
-- [ ] Verify all 596+ tests still pass
-- [ ] Target: < 5s for IndexedDB tests
-
-### Phase 6: Form Examples (Deferred from v0.3.0)
-
-Interactive form examples in `examples/reactor-demos/`:
-
-- [ ] **Basic Login Form**
-  - Email/password with validation
-  - useField action usage
-  - Error display
-  - Submit handling
-
-- [ ] **Registration with Password Confirmation**
-  - Cross-field validation
-  - Password strength indicator
-  - Async email availability check
-  - Terms checkbox
-
-- [ ] **Multi-step Form Wizard**
-  - 3+ steps with navigation
-  - Per-step validation
-  - Progress indicator
-  - Data persistence between steps
-
-- [ ] **Dynamic Form Fields**
-  - Add/remove fields dynamically
-  - Array field validation
-  - Reordering support
-
-### Phase 7: Demo Updates
-- [ ] Update ContactForm.svelte to use `createForm()`
-- [ ] Update demo site to use `@svelte-reactor/core` imports
-- [ ] Update demo README
 
 ---
 
@@ -235,86 +61,27 @@ Interactive form examples in `examples/reactor-demos/`:
 
 ### No Breaking Changes
 
-v0.3.1 is fully backward compatible. All improvements are opt-in or automatic.
+v0.3.1 is fully backward compatible. Just update your package:
 
-### Enabling New Features
-
-```typescript
-// Connection pooling: automatic, no changes needed
-
-// Batch writes: enabled by default in v0.3.1
-persist({
-  storage: 'indexedDB',
-  batchWrites: true  // default
-})
-
-// Collection support: opt-in
-persist({
-  storage: 'indexedDB',
-  collections: {
-    items: { idKey: 'id', saveIndividually: true }
-  }
-})
+```bash
+npm update @svelte-reactor/core
+# or
+pnpm update @svelte-reactor/core
 ```
 
----
+### Expected Impact on Consumer Apps
 
-## Success Metrics
-
-| Metric | Target |
-|--------|--------|
-| IndexedDB test time | < 5s (from 15s) |
-| Connection open time | < 10ms (from 50ms) |
-| Batch write performance | 10x improvement |
-| Collection update performance | 20x improvement |
-| Bundle size increase | < 1 KB |
-| New tests | 30+ |
+Your app bundle will no longer include duplicated Svelte runtime code. The savings depend on how your bundler handles shared dependencies.
 
 ---
 
-## Checklist
+## Changelog
 
-### Phase 1: Connection Pooling
-- [ ] `IndexedDBPool` class
-- [ ] Reference counting
-- [ ] Concurrent access tests
-- [ ] Performance benchmark
-
-### Phase 2: Batch Writes
-- [ ] `batchWrites` option
-- [ ] Write queue
-- [ ] Flush handling
-- [ ] Tests
-
-### Phase 3: Collections
-- [ ] `collections` option
-- [ ] Individual item storage
-- [ ] Delta updates
-- [ ] Large dataset tests
-
-### Phase 4: Query (Preview)
-- [ ] `query()` method
-- [ ] Basic operators
-- [ ] Index support
-- [ ] Documentation
-
-### Phase 5: Tests
-- [ ] Optimize wait times
-- [ ] Fake timers
-- [ ] All tests pass
-
-### Phase 6: Form Examples
-- [ ] Basic login form
-- [ ] Registration form
-- [ ] Multi-step wizard
-- [ ] Dynamic fields
-
-### Phase 7: Demos
-- [ ] Update existing demos
-- [ ] Update imports to @svelte-reactor/core
+- **Fixed:** Svelte runtime duplication in build output
+- **Changed:** `computed-store` chunk: 38 KB → 15.71 KB (59% smaller)
+- **Added:** Missing Svelte externals in vite.config.ts
+- **Tests:** 617 tests passing
 
 ---
 
-**Created:** 2025-01-10
-**Updated:** 2025-01-16
-**Status:** Planning
+**Released:** 2026-01-17
